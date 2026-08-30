@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk.Worker">
+
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <UserSecretsId>dotnet-Service-3ee91abe-456d-458f-a5bd-efce0faec2a1</UserSecretsId>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="MailKit" Version="4.17.0" />
+        <PackageReference Include="MassTransit.RabbitMQ" Version="9.2.1" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.10"/>
+    </ItemGroup>
+</Project>
