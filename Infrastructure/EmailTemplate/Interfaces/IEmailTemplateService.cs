@@ -1,6 +1,6 @@
-namespace Infrastructure.EmailTemplate;
+namespace Infrastructure.EmailTemplate.Interfaces;
 
 public interface IEmailTemplateService
 {
-    Task RenderTemplateAsync<TModel>(string templateName, TModel model);
+    Task<string> RenderTemplateAsync<T>(string templateName, T model);
 }

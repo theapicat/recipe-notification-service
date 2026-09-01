@@ -14,7 +14,9 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="EmailTemplate\Templates\" />
+        <None Update="EmailTemplate\Templates\*.html">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
 
 </Project>
