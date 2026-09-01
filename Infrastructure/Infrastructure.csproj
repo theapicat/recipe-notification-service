@@ -3,12 +3,18 @@
     <PropertyGroup>
         <TargetFramework>net10.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
+        <Nullable>disable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
       <PackageReference Include="MailKit" Version="4.17.0" />
+      <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="10.0.11" />
+      <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.11" />
       <PackageReference Include="Scriban" Version="7.2.6" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="EmailTemplate\Templates\" />
     </ItemGroup>
 
 </Project>
