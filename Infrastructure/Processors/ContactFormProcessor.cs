@@ -50,7 +50,5 @@ public class ContactFormProcessor(
             htmlBody: userReceiptHtml,
             cancellationToken: cancellationToken
         );
-
-        logger.LogInformation("E-post til admin og kvittering til {Email} er sendt ut.", eventData.Email);
     }
 }

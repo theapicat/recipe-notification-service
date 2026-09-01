@@ -6,7 +6,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
 
-namespace Infrastructure.Mail;
+namespace Infrastructure.EmailDelivery;
 
 public class EmailDeliveryService(IOptions<SmtpSettings> settings, ILogger<EmailDeliveryService> logger)
     : IEmailDeliveryService
@@ -53,7 +53,6 @@ public class EmailDeliveryService(IOptions<SmtpSettings> settings, ILogger<Email
             }
 
             await client.SendAsync(mimeMessage, cancellationToken);
-            logger.LogInformation("E-post '{Subject}' ble sendt til {To}", subject, to);
         }
         catch (Exception ex)
         {

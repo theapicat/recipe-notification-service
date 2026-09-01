@@ -12,14 +12,6 @@ public class ContactFormSubmittedConsumer(
     {
         var message = context.Message;
 
-        logger.LogInformation(
-            "[RabbitMQ] Mottok kontaktskjema fra {Name} ({Email}) | Emne: '{Subject}'",
-            message.Name,
-            message.Email,
-            message.Subject
-        );
-
-        // Kaller prosessoren og sender med MassTransit sitt CancellationToken
         await processor.ProcessAsync(message, context.CancellationToken);
     }
 }

@@ -8,7 +8,7 @@ builder.AddSerilogLogging();
 builder.Services.AddMassTransitServices(builder.Configuration);
 builder.Services.AddSmtpService(builder.Configuration);
 builder.Services.AddMailServices();
-builder.Services.AddMailProcessors();
+builder.Services.AddNotificationProcessors();
 
 var host = builder.Build();
 host.Run();

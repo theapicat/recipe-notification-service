@@ -1,5 +1,5 @@
+using Infrastructure.EmailDelivery;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Mail;
 using Infrastructure.TemplateService;
 using Infrastructure.TemplateService.Interfaces;
 
