@@ -12,6 +12,9 @@ public static class MassTransitExtensions
         services.AddMassTransit(x =>
         {
             x.AddConsumer<ContactFormSubmittedConsumer>();
+            x.AddConsumer<PasswordChangedConsumer>();
+            x.AddConsumer<UserAccountDeletedConsumer>();
+            x.AddConsumer<UserRegisteredConsumer>();
             
             x.UsingRabbitMq((context, cfg) =>
             {

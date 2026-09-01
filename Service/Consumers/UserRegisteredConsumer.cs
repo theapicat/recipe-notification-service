@@ -9,6 +9,7 @@ public class UserRegisteredConsumer(
 {
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)
     {
+        Console.WriteLine("Register recieved!");
         var message = context.Message;
         await processor.ProcessAsync(message, context.CancellationToken);
     }
