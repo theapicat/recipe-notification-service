@@ -1,6 +1,6 @@
-namespace Recipe.Notification.Infrastructure.EmailSender.Interfaces;
+namespace Infrastructure.EmailDelivery.Interfaces;
 
-public interface IEmailSenderService
+public interface IEmailDeliveryService
 {
     Task SendEmailAsync(
         string to, 

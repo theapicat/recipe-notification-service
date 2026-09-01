@@ -3,7 +3,12 @@ using Service.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+builder.AddSerilogLogging();
+
 builder.Services.AddMassTransitServices(builder.Configuration);
+builder.Services.AddSmtpService(builder.Configuration);
+builder.Services.AddMailServices();
+builder.Services.AddMailProcessors();
 
 var host = builder.Build();
 host.Run();

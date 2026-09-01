@@ -1,15 +1,15 @@
-using Infrastructure.EmailSender.Configurations;
+using Infrastructure.EmailDelivery.Configurations;
+using Infrastructure.EmailDelivery.Interfaces;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using MimeKit;
-using Recipe.Notification.Infrastructure.EmailSender.Interfaces;
 
-namespace Infrastructure.EmailSender;
+namespace Infrastructure.Mail;
 
-public class EmailSenderService(IOptions<SmtpSettings> settings, ILogger<EmailSenderService> logger)
-    : IEmailSenderService
+public class EmailDeliveryService(IOptions<SmtpSettings> settings, ILogger<EmailDeliveryService> logger)
+    : IEmailDeliveryService
 {
     private readonly SmtpSettings _settings = settings.Value;
 

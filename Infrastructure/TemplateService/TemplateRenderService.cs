@@ -1,13 +1,12 @@
-using Infrastructure.EmailTemplate.Interfaces;
+using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Scriban;
 
-namespace Infrastructure.EmailTemplate;
+namespace Infrastructure.TemplateService;
 
-public class EmailTemplateService(ILogger<EmailTemplateService> logger) : IEmailTemplateService
+public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITemplateRenderService
 {
-    private readonly string _templatesFolder = Path.Combine(AppContext.BaseDirectory, "Infrastructure", "EmailTemplate", "Templates");
-
+    private readonly string _templatesFolder = Path.Combine(AppContext.BaseDirectory, "TemplateService", "Templates");
     public async Task<string> RenderTemplateAsync<T>(string templateName, T model)
     {
         var filePath = Path.Combine(_templatesFolder, $"{templateName}.html");

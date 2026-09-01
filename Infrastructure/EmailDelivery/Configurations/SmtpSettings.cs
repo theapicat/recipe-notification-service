@@ -1,4 +1,4 @@
-namespace Infrastructure.EmailSender.Configurations;
+namespace Infrastructure.EmailDelivery.Configurations;
 
 public class SmtpSettings
 {
