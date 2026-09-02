@@ -11,9 +11,12 @@ public static class MassTransitExtensions
     {
         services.AddMassTransit(x =>
         {
+            x.AddConsumer<AccountDeletedBySystemConsumer>();
+            x.AddConsumer<AccountDeletedByUserConsumer>();
+            x.AddConsumer<Confirmation7DaysReminderConsumer>();
+            x.AddConsumer<Confirmation14DaysReminderConsumer>();
             x.AddConsumer<ContactFormSubmittedConsumer>();
             x.AddConsumer<PasswordChangedConsumer>();
-            x.AddConsumer<UserAccountDeletedConsumer>();
             x.AddConsumer<UserRegisteredConsumer>();
             
             x.UsingRabbitMq((context, cfg) =>

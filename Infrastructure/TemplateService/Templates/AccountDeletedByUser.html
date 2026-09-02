@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .header { background-color: #616161; color: white; padding: 20px; border-radius: 6px 6px 0 0; text-align: center; }
+        .content { padding: 20px; }
+        .reason-box { background-color: #f5f5f5; border: 1px solid #e0e0e0; padding: 12px 16px; margin: 15px 0; border-radius: 4px; font-size: 0.9em; }
+        .footer { font-size: 0.85em; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 style="margin:0; font-size: 24px;">Din konto hos Kjøkkenhylla er slettet</h1>
+    </div>
+    <div class="content">
+        <p>Hei {{ name }},</p>
+        <p>Dette er en bekreftelse på at din brukerkonto hos Kjøkkenhylla og alle tilhørende personopplysninger har blitt permanent slettet fra våre systemer.</p>
+
+        <div class="reason-box">
+            <strong>Årsak til sletting:</strong><br>
+            {{ deletion_reason }}
+        </div>
+
+        <p>Slettingen er utført automatisk i henhold til våre <a href="{{ terms_link }}" style="color: #2e7d32; text-decoration: underline;">brukervilkår (§ 3)</a> for å ta vare på personvern, sikkerhet og god datahygiene.</p>
+
+        <p>Dersom du ønsker å bruke Kjøkkenhylla igjen i fremtiden, er du hjertelig velkommen til å opprette en ny konto på vår nettside.</p>
+    </div>
+    <div class="footer">
+        Med vennlig hilsen,<br>
+        <strong>Kjøkkenhylla-teamet</strong>
+    </div>
+</div>
+</body>
+</html>

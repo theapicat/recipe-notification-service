@@ -11,9 +11,14 @@ public static class MailProcessorExtensions
         services.AddTransient<IContactFormProcessor, ContactFormProcessor>();
 
         // Konto & Sikkerhet
+        services.AddTransient<IAccountDeletedBySystemProcessor, AccountDeletedBySystemProcessor>();
+        services.AddTransient<IAccountDeletedByUserProcessor, AccountDeletedByUserProcessor>();
+        
+        services.AddTransient<IConfirmation7DaysReminderProcessor, Confirmation7DaysReminderProcessor>();
+        services.AddTransient<IConfirmation14DaysReminderProcessor,  Confirmation14DaysReminderProcessor>();
+        
         services.AddTransient<IUserRegisteredProcessor, UserRegisteredProcessor>();
         services.AddTransient<IPasswordChangedProcessor, PasswordChangedProcessor>();
-        services.AddTransient<IUserAccountDeletedProcessor, UserAccountDeletedProcessor>();
 
         return services;
     }

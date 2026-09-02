@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .header { background-color: #2e7d32; color: white; padding: 20px; border-radius: 6px 6px 0 0; text-align: center; }
+        .content { padding: 20px; }
+        .alert-box { background-color: #fff3cd; border-left: 4px solid #ffc107; padding: 12px 16px; margin: 15px 0; border-radius: 4px; font-size: 0.9em; }
+        .button-container { text-align: center; margin: 30px 0; }
+        .btn { background-color: #2e7d32; color: white !important; padding: 12px 24px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; }
+        .footer { font-size: 0.85em; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 style="margin:0; font-size: 24px;">Påminnelse: Bekreft din e-postadresse</h1>
+    </div>
+    <div class="content">
+        <p>Hei {{ name }},</p>
+        <p>Det har nå gått 7 dager siden du opprettet konto hos Kjøkkenhylla, men e-postadressen din er ennå ikke bekreftet.</p>
+
+        <div class="alert-box">
+            <strong>Viktig informasjon om din konto:</strong><br>
+            I henhold til våre <a href="{{ terms_link }}" style="color: #856404; text-decoration: underline;">brukervilkår (§ 3)</a> må nye kontoer bekreftes for å forhindre inaktive og fiktive brukere:
+            <ul>
+                <li><strong>Om 7 dager (totalt 14 dager):</strong> Kontoen sperres for innlogging dersom den ikke er bekreftet.</li>
+                <li><strong>Om 23 dager (totalt 30 dager):</strong> Sperrede kontoer slettes permanent sammen med all tilhørende data.</li>
+            </ul>
+        </div>
+
+        <p>Trykk på knappen under for å bekrefte e-postadressen din og holde kontoen aktiv:</p>
+
+        <div class="button-container">
+            <a href="{{ confirmation_link }}" class="btn">Bekreft e-postadresse</a>
+        </div>
+
+        <p style="font-size: 0.9em; color: #666;">
+            Dersom knappen ikke fungerer, kan du kopiere og lime inn denne lenken i nettleseren din:<br>
+            <a href="{{ confirmation_link }}">{{ confirmation_link }}</a>
+        </p>
+    </div>
+    <div class="footer">
+        Med vennlig hilsen,<br>
+        <strong>Kjøkkenhylla-teamet</strong>
+    </div>
+</div>
+</body>
+</html>

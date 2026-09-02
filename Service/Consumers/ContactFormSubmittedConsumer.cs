@@ -11,6 +11,7 @@ public class ContactFormSubmittedConsumer(
     public async Task Consume(ConsumeContext<ContactFormSubmittedEvent> context)
     {
         var message = context.Message;
+        logger.LogInformation("Mottok ContactFormSubmittedEvent for e-post: {Email}", message.Email);
 
         await processor.ProcessAsync(message, context.CancellationToken);
     }
