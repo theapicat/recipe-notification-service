@@ -18,7 +18,7 @@ public class AccountDeletedBySystemProcessor(
     {
         logger.LogInformation("Sender system-slettevarsel til {Email}", eventData.Email);
 
-        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/terms";
+        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
 
         var templateModel = new
         {

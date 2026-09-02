@@ -18,7 +18,7 @@ public class Confirmation14DaysReminderProcessor(
     {
         logger.LogInformation("Sender varsel om sperret konto (14 dager) til {Email}", eventData.Email);
 
-        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/terms";
+        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
 
         var templateModel = new
         {

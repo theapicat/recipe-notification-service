@@ -2,5 +2,7 @@ namespace Infrastructure.Options;
 
 public class AppSettings
 {
-    public string FrontendUrl { get; init; }
+    public const string SectionName = "AppSettings";
+
+    public string FrontendUrl { get; set; } = "http://localhost:3000";
 }

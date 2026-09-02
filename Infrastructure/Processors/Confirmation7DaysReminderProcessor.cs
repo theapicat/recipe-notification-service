@@ -18,7 +18,7 @@ public class Confirmation7DaysReminderProcessor(
     {
         logger.LogInformation("Sender 7-dagers påminnelse om e-postbekreftelse til {Email}", eventData.Email);
 
-        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/terms";
+        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
 
         var templateModel = new
         {
