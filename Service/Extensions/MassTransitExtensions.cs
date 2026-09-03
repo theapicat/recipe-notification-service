@@ -17,6 +17,7 @@ public static class MassTransitExtensions
             x.AddConsumer<Confirmation14DaysReminderConsumer>();
             x.AddConsumer<ContactFormSubmittedConsumer>();
             x.AddConsumer<PasswordChangedConsumer>();
+            x.AddConsumer<PasswordResetRequestedConsumer>();
             x.AddConsumer<UserRegisteredConsumer>();
             
             x.UsingRabbitMq((context, cfg) =>

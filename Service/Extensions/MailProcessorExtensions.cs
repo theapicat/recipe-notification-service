@@ -19,6 +19,7 @@ public static class MailProcessorExtensions
         
         services.AddTransient<IUserRegisteredProcessor, UserRegisteredProcessor>();
         services.AddTransient<IPasswordChangedProcessor, PasswordChangedProcessor>();
+        services.AddTransient<IPasswordResetRequestedProcessor, PasswordResetRequestedProcessor>();
 
         return services;
     }
