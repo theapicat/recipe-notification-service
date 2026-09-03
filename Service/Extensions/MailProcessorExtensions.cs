@@ -18,6 +18,7 @@ public static class MailProcessorExtensions
         services.AddTransient<IConfirmation14DaysReminderProcessor,  Confirmation14DaysReminderProcessor>();
         
         services.AddTransient<IUserRegisteredProcessor, UserRegisteredProcessor>();
+        services.AddTransient<IUserRegisteredWithGoogleProcessor, UserRegisteredWithGoogleProcessor>();
         services.AddTransient<IPasswordChangedProcessor, PasswordChangedProcessor>();
         services.AddTransient<IPasswordResetRequestedProcessor, PasswordResetRequestedProcessor>();
 

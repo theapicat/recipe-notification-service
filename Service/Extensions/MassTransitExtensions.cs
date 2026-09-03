@@ -19,6 +19,7 @@ public static class MassTransitExtensions
             x.AddConsumer<PasswordChangedConsumer>();
             x.AddConsumer<PasswordResetRequestedConsumer>();
             x.AddConsumer<UserRegisteredConsumer>();
+            x.AddConsumer<UserRegisteredWithGoogleConsumer>();
             
             x.UsingRabbitMq((context, cfg) =>
             {
