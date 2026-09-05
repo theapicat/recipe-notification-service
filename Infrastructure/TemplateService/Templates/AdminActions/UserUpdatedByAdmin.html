@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <style>
+        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
+        .header { background-color: #0288d1; color: white; padding: 20px; border-radius: 6px 6px 0 0; text-align: center; }
+        .content { padding: 20px; }
+        .info-box { background-color: #e1f5fe; border-left: 4px solid #0288d1; padding: 12px 16px; margin: 25px 0 15px 0; border-radius: 4px; font-size: 0.88em; color: #555; }
+        .footer { font-size: 0.85em; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1 style="margin:0; font-size: 24px;">Profilen din har blitt oppdatert</h1>
+    </div>
+    <div class="content">
+        <p>Hei {{ name }},</p>
+        <p>Vi informerer om at en administrator har oppdatert profilinformasjonen din hos Kjøkkenhylla den <strong>{{ updated_at }}</strong>.</p>
+
+        <div class="info-box">
+            <strong>Endringer gjennomført:</strong><br>
+            Dersom e-postadressen din ble endret, har den blitt oppdatert fra <em>{{ old_email }}</em> til <strong>{{ new_email }}</strong>.
+        </div>
+
+        <p style="font-size: 0.9em; color: #666; margin-top: 20px;">
+            Dersom du ikke var klar over denne endringen eller mener at dette er en feil, vennligst ta kontakt med vår support umiddelbart.
+        </p>
+    </div>
+    <div class="footer">
+        Med vennlig hilsen,<br>
+        <strong>Kjøkkenhylla-teamet</strong>
+    </div>
+</div>
+</body>
+</html>

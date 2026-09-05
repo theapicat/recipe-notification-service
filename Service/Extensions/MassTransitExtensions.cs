@@ -1,5 +1,8 @@
 using MassTransit;
 using Service.Consumers;
+using Service.Consumers.AdminActions;
+using Service.Consumers.SystemActions;
+using Service.Consumers.UserActions;
 
 namespace Service.Extensions;
 
@@ -11,6 +14,7 @@ public static class MassTransitExtensions
     {
         services.AddMassTransit(x =>
         {
+            // user actions
             x.AddConsumer<AccountDeletedBySystemConsumer>();
             x.AddConsumer<AccountDeletedByUserConsumer>();
             x.AddConsumer<Confirmation7DaysReminderConsumer>();
@@ -21,6 +25,13 @@ public static class MassTransitExtensions
             x.AddConsumer<PasswordResetRequestedConsumer>();
             x.AddConsumer<UserRegisteredConsumer>();
             x.AddConsumer<UserRegisteredWithGoogleConsumer>();
+            
+            // admin actions
+            x.AddConsumer<EmailManuallyConfirmedByAdminConsumer>();
+            x.AddConsumer<UserAccountDeletedByAdminConsumer>();
+            x.AddConsumer<UserLockedByAdminConsumer>();
+            x.AddConsumer<UserUnlockedByAdminConsumer>();
+            x.AddConsumer<UserUpdatedByAdminConsumer>();
             
             x.UsingRabbitMq((context, cfg) =>
             {

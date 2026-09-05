@@ -1,5 +1,11 @@
 using Infrastructure.Processors;
+using Infrastructure.Processors.AdminActions;
 using Infrastructure.Processors.Interfaces;
+using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces.SystemActions;
+using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.SystemActions;
+using Infrastructure.Processors.UserActions;
 
 namespace Service.Extensions;
 
@@ -22,6 +28,13 @@ public static class MailProcessorExtensions
         services.AddTransient<IUserRegisteredWithGoogleProcessor, UserRegisteredWithGoogleProcessor>();
         services.AddTransient<IPasswordChangedProcessor, PasswordChangedProcessor>();
         services.AddTransient<IPasswordResetRequestedProcessor, PasswordResetRequestedProcessor>();
+
+
+        services.AddTransient<IEmailManuallyConfirmedByAdminProcessor, EmailManuallyConfirmedByAdminProcessor>();
+        services.AddTransient<IUserAccountDeletedByAdminProcessor, UserAccountDeletedByAdminProcessor>();
+        services.AddTransient<IUserLockedByAdminProcessor, UserLockedByAdminProcessor>();
+        services.AddTransient<IUserUnlockedByAdminProcessor, UserUnlockedByAdminProcessor>();
+        services.AddTransient<IUserUpdatedByAdminProcessor, UserUpdatedByAdminProcessor>();
 
         return services;
     }

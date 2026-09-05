@@ -16,11 +16,10 @@
     <ItemGroup>
       <ProjectReference Include="..\Contracts\Contracts.csproj" />
     </ItemGroup>
-
+    
     <ItemGroup>
-        <Content Include="TemplateService\Templates\*.html">
+        <Content Include="TemplateService\Templates\**\*.html">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Link>TemplateService\Templates\%(Filename)%(Extension)</Link>
         </Content>
     </ItemGroup>
 
