@@ -22,7 +22,7 @@ public class UserRegisteredWithGoogleProcessor(
             ? appSettings.Value.FrontendUrl 
             : "http://localhost:3000";
 
-        var termsLink = $"{frontendUrl.TrimEnd('/')}/terms";
+        var termsLink = $"{frontendUrl.TrimEnd('/')}/legal/terms";
 
         var templateModel = new
         {
