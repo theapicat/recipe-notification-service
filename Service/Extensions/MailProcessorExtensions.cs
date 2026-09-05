@@ -16,6 +16,7 @@ public static class MailProcessorExtensions
         
         services.AddTransient<IConfirmation7DaysReminderProcessor, Confirmation7DaysReminderProcessor>();
         services.AddTransient<IConfirmation14DaysReminderProcessor,  Confirmation14DaysReminderProcessor>();
+        services.AddTransient<IResendEmailConfirmationProcessor, ResendEmailConfirmationProcessor>();
         
         services.AddTransient<IUserRegisteredProcessor, UserRegisteredProcessor>();
         services.AddTransient<IUserRegisteredWithGoogleProcessor, UserRegisteredWithGoogleProcessor>();

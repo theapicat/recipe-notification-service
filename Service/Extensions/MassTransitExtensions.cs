@@ -15,6 +15,7 @@ public static class MassTransitExtensions
             x.AddConsumer<AccountDeletedByUserConsumer>();
             x.AddConsumer<Confirmation7DaysReminderConsumer>();
             x.AddConsumer<Confirmation14DaysReminderConsumer>();
+            x.AddConsumer<ResendEmailConfirmationRequestedConsumer>();
             x.AddConsumer<ContactFormSubmittedConsumer>();
             x.AddConsumer<PasswordChangedConsumer>();
             x.AddConsumer<PasswordResetRequestedConsumer>();
