@@ -35,6 +35,7 @@ public static class MailProcessorExtensions
         services.AddTransient<IUserLockedByAdminProcessor, UserLockedByAdminProcessor>();
         services.AddTransient<IUserUnlockedByAdminProcessor, UserUnlockedByAdminProcessor>();
         services.AddTransient<IUserUpdatedByAdminProcessor, UserUpdatedByAdminProcessor>();
+        services.AddTransient<IUserDeletedAndBlacklistedByAdminProcessor, UserDeletedAndBlacklistedByAdminProcessor>();
 
         return services;
     }

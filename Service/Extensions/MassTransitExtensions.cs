@@ -32,6 +32,7 @@ public static class MassTransitExtensions
             x.AddConsumer<UserLockedByAdminConsumer>();
             x.AddConsumer<UserUnlockedByAdminConsumer>();
             x.AddConsumer<UserUpdatedByAdminConsumer>();
+            x.AddConsumer<UserDeletedAndBlacklistedByAdminConsumer>();
             
             x.UsingRabbitMq((context, cfg) =>
             {
