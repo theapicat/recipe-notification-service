@@ -10,7 +10,7 @@ public class EmailManuallyConfirmedByAdminConsumer(
 {
     public async Task Consume(ConsumeContext<EmailManuallyConfirmedByAdminEvent> context)
     {
-        logger.LogInformation("Mottok EmailManuallyConfirmedByAdminEvent for bruker {UserId} ({Email})", 
+        logger.LogInformation("Mottok EmailManuallyConfirmedByAdminEvent for bruker {UserId} ({Email})",
             context.Message.UserId, context.Message.Email);
 
         await processor.ProcessAsync(context.Message, context.CancellationToken);

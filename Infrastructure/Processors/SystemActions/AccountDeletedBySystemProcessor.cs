@@ -14,7 +14,8 @@ public class AccountDeletedBySystemProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<AccountDeletedBySystemProcessor> logger) : IAccountDeletedBySystemProcessor
 {
-    public async Task ProcessAsync(UserAccountDeletedBySystemEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(UserAccountDeletedBySystemEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender system-slettevarsel til {Email}", eventData.Email);
 
@@ -27,12 +28,13 @@ public class AccountDeletedBySystemProcessor(
             terms_link = termsLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("SystemActions/AccountDeletedBySystem", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("SystemActions/AccountDeletedBySystem", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Din konto hos Kjøkkenhylla har blitt slettet",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Din konto hos Kjøkkenhylla har blitt slettet",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

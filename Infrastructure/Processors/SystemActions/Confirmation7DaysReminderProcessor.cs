@@ -14,7 +14,8 @@ public class Confirmation7DaysReminderProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<Confirmation7DaysReminderProcessor> logger) : IConfirmation7DaysReminderProcessor
 {
-    public async Task ProcessAsync(Confirmation7DaysReminderEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(Confirmation7DaysReminderEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender 7-dagers påminnelse om e-postbekreftelse til {Email}", eventData.Email);
 
@@ -28,12 +29,13 @@ public class Confirmation7DaysReminderProcessor(
         };
 
         // Relativ sti oppdatert med SystemActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("SystemActions/Confirmation7DaysReminder", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("SystemActions/Confirmation7DaysReminder", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Påminnelse: Bekreft din e-postadresse - Kjøkkenhylla",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Påminnelse: Bekreft din e-postadresse - Kjøkkenhylla",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

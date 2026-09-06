@@ -14,7 +14,8 @@ public class ResendEmailConfirmationProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<ResendEmailConfirmationProcessor> logger) : IResendEmailConfirmationProcessor
 {
-    public async Task ProcessAsync(ResendEmailConfirmationRequestedEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(ResendEmailConfirmationRequestedEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender ny bekreftelses-epost til bruker {Email}", eventData.Email);
 
@@ -28,12 +29,13 @@ public class ResendEmailConfirmationProcessor(
         };
 
         // Relativ sti oppdatert til UserActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/ResendEmailConfirmation", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/ResendEmailConfirmation", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Bekreft din e-postadresse - Kjøkkenhylla",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Bekreft din e-postadresse - Kjøkkenhylla",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

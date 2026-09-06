@@ -1,5 +1,4 @@
 using Serilog;
-using Microsoft.Extensions.Hosting;
 
 namespace Service.Extensions;
 

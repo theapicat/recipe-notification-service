@@ -14,7 +14,8 @@ public class Confirmation14DaysReminderProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<Confirmation14DaysReminderProcessor> logger) : IConfirmation14DaysReminderProcessor
 {
-    public async Task ProcessAsync(Confirmation14DaysReminderEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(Confirmation14DaysReminderEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender varsel om sperret konto (14 dager) til {Email}", eventData.Email);
 
@@ -28,12 +29,13 @@ public class Confirmation14DaysReminderProcessor(
         };
 
         // Relativ sti oppdatert til SystemActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("SystemActions/Confirmation14DaysReminder", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("SystemActions/Confirmation14DaysReminder", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Kontoen din er midlertidig sperret - Kjøkkenhylla",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Kontoen din er midlertidig sperret - Kjøkkenhylla",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

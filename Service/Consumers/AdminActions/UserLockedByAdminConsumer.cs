@@ -10,7 +10,7 @@ public class UserLockedByAdminConsumer(
 {
     public async Task Consume(ConsumeContext<UserLockedByAdminEvent> context)
     {
-        logger.LogInformation("Mottok UserLockedByAdminEvent for bruker {UserId} ({Email})", 
+        logger.LogInformation("Mottok UserLockedByAdminEvent for bruker {UserId} ({Email})",
             context.Message.UserId, context.Message.Email);
 
         await processor.ProcessAsync(context.Message, context.CancellationToken);

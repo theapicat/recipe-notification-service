@@ -14,7 +14,8 @@ public class UserRegisteredWithGoogleProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<UserRegisteredWithGoogleProcessor> logger) : IUserRegisteredWithGoogleProcessor
 {
-    public async Task ProcessAsync(UserRegisteredWithGoogleEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(UserRegisteredWithGoogleEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender Google-velkomst-epost til ny bruker {Email}", eventData.Email);
 
@@ -29,12 +30,14 @@ public class UserRegisteredWithGoogleProcessor(
         };
 
         // Relativ sti oppdatert til UserActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWithGoogleWelcome", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWithGoogleWelcome",
+                templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Velkommen til Kjøkkenhylla!",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Velkommen til Kjøkkenhylla!",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

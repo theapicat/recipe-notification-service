@@ -28,12 +28,13 @@ public class UserRegisteredProcessor(
         };
 
         // Relativ sti oppdatert til UserActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWelcome", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWelcome", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Velkommen til Kjøkkenhylla! Bekreft din e-postadresse",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Velkommen til Kjøkkenhylla! Bekreft din e-postadresse",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

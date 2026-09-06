@@ -3,13 +3,59 @@
 <head>
     <meta charset="utf-8">
     <style>
-        body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
-        .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 8px; }
-        .header { background-color: #c62828; color: white; padding: 20px; border-radius: 6px 6px 0 0; text-align: center; }
-        .content { padding: 20px; }
-        .info-box { background-color: #fff8f8; border-left: 4px solid #c62828; padding: 12px 16px; margin: 25px 0 15px 0; border-radius: 4px; font-size: 0.88em; color: #555; }
-        .reason-box { background-color: #f5f5f5; border: 1px solid #e0e0e0; padding: 12px; margin: 15px 0; border-radius: 4px; font-size: 0.9em; }
-        .footer { font-size: 0.85em; color: #888; margin-top: 20px; border-top: 1px solid #eee; padding-top: 10px; text-align: center; }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+        }
+
+        .header {
+            background-color: #c62828;
+            color: white;
+            padding: 20px;
+            border-radius: 6px 6px 0 0;
+            text-align: center;
+        }
+
+        .content {
+            padding: 20px;
+        }
+
+        .info-box {
+            background-color: #fff8f8;
+            border-left: 4px solid #c62828;
+            padding: 12px 16px;
+            margin: 25px 0 15px 0;
+            border-radius: 4px;
+            font-size: 0.88em;
+            color: #555;
+        }
+
+        .reason-box {
+            background-color: #f5f5f5;
+            border: 1px solid #e0e0e0;
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: 4px;
+            font-size: 0.9em;
+        }
+
+        .footer {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 20px;
+            border-top: 1px solid #eee;
+            padding-top: 10px;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -19,7 +65,8 @@
     </div>
     <div class="content">
         <p>Hei {{ name }},</p>
-        <p>Vi vil informere deg om at din brukerkonto hos Kjøkkenhylla (knyttet til e-postadressen <strong>{{ email }}</strong>) har blitt slettet og e-postadressen din er svartelistet av en administrator.</p>
+        <p>Vi vil informere deg om at din brukerkonto hos Kjøkkenhylla (knyttet til e-postadressen <strong>{{ email
+            }}</strong>) har blitt slettet og e-postadressen din er svartelistet av en administrator.</p>
 
         {{ if reason }}
         <div class="reason-box">
@@ -30,7 +77,8 @@
 
         <div class="info-box">
             <strong>Hva betyr dette?</strong><br>
-            Din profil og alle tilknyttede personopplysninger er slettet fra våre systemer. E-postadressen din er i tillegg sperret for fremtidige registreringer hos Kjøkkenhylla.
+            Din profil og alle tilknyttede personopplysninger er slettet fra våre systemer. E-postadressen din er i
+            tillegg sperret for fremtidige registreringer hos Kjøkkenhylla.
         </div>
 
         <p style="font-size: 0.9em; color: #666; margin-top: 20px;">

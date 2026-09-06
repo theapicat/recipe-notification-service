@@ -23,12 +23,13 @@ public class UserUpdatedByAdminProcessor(
             updated_at = eventData.UpdatedAt.ToString("dd.MM.yyyy HH:mm")
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserUpdatedByAdmin", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("AdminActions/UserUpdatedByAdmin", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Profilinformasjonen din hos Kjøkkenhylla har blitt oppdatert",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Profilinformasjonen din hos Kjøkkenhylla har blitt oppdatert",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

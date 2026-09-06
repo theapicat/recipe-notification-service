@@ -1,7 +1,6 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.Processors.Interfaces.AdminActions;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 
 namespace Service.Consumers.AdminActions;
 
@@ -11,7 +10,7 @@ public class UserUpdatedByAdminConsumer(
 {
     public async Task Consume(ConsumeContext<UserUpdatedByAdminEvent> context)
     {
-        logger.LogInformation("Mottok UserUpdatedByAdminEvent for bruker {UserId} ({Email})", 
+        logger.LogInformation("Mottok UserUpdatedByAdminEvent for bruker {UserId} ({Email})",
             context.Message.UserId, context.Message.Email);
 
         await processor.ProcessAsync(context.Message, context.CancellationToken);

@@ -4,7 +4,8 @@ namespace Service.Extensions;
 
 public static class ApplicationExtensions
 {
-    public static IServiceCollection AddApplicationOptions(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddApplicationOptions(this IServiceCollection services,
+        IConfiguration configuration)
     {
         services.AddOptions<AppSettings>()
             .Bind(configuration.GetSection(AppSettings.SectionName))

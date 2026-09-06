@@ -24,12 +24,13 @@ public class PasswordChangedProcessor(
         };
 
         // Relativ sti oppdatert til UserActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/PasswordChangedSecurityNotice", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/PasswordChangedSecurityNotice", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Sikkerhetsvarsel: Passordet ditt har blitt endret",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Sikkerhetsvarsel: Passordet ditt har blitt endret",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

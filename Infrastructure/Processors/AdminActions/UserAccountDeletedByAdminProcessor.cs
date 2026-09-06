@@ -11,7 +11,8 @@ public class UserAccountDeletedByAdminProcessor(
     IEmailDeliveryService emailDelivery,
     ILogger<UserAccountDeletedByAdminProcessor> logger) : IUserAccountDeletedByAdminProcessor
 {
-    public async Task ProcessAsync(UserAccountDeletedByAdminEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(UserAccountDeletedByAdminEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender slettemelding (admin) til {Email}", eventData.Email);
 
@@ -21,12 +22,13 @@ public class UserAccountDeletedByAdminProcessor(
             email = eventData.Email
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserAccountDeletedByAdmin", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("AdminActions/UserAccountDeletedByAdmin", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Din brukerkonto hos Kjøkkenhylla har blitt slettet",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Din brukerkonto hos Kjøkkenhylla har blitt slettet",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

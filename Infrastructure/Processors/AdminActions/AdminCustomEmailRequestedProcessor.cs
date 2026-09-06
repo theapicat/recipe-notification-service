@@ -11,9 +11,11 @@ public class AdminCustomEmailRequestedProcessor(
     IEmailDeliveryService emailDelivery,
     ILogger<AdminCustomEmailRequestedProcessor> logger) : IAdminCustomEmailRequestedProcessor
 {
-    public async Task ProcessAsync(AdminCustomEmailRequestedEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(AdminCustomEmailRequestedEvent eventData,
+        CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender e-post fra admin til bruker {Email} med emne '{Subject}'", eventData.Email, eventData.Subject);
+        logger.LogInformation("Sender e-post fra admin til bruker {Email} med emne '{Subject}'", eventData.Email,
+            eventData.Subject);
 
         var templateModel = new
         {
@@ -25,9 +27,9 @@ public class AdminCustomEmailRequestedProcessor(
         var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/AdminCustomEmail", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: eventData.Subject,
-            htmlBody: htmlBody,
+            eventData.Email,
+            eventData.Subject,
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

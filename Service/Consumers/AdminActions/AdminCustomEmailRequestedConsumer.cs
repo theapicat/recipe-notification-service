@@ -11,7 +11,7 @@ public class AdminCustomEmailRequestedConsumer(
     public async Task Consume(ConsumeContext<AdminCustomEmailRequestedEvent> context)
     {
         logger.LogInformation("Mottok AdminCustomEmailRequestedEvent for UserId {UserId}", context.Message.UserId);
-        
+
         await processor.ProcessAsync(context.Message, context.CancellationToken);
     }
 }

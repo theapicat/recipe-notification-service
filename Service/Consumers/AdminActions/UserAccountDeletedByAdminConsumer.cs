@@ -10,7 +10,7 @@ public class UserAccountDeletedByAdminConsumer(
 {
     public async Task Consume(ConsumeContext<UserAccountDeletedByAdminEvent> context)
     {
-        logger.LogInformation("Mottok UserAccountDeletedByAdminEvent for bruker {UserId} ({Email})", 
+        logger.LogInformation("Mottok UserAccountDeletedByAdminEvent for bruker {UserId} ({Email})",
             context.Message.UserId, context.Message.Email);
 
         await processor.ProcessAsync(context.Message, context.CancellationToken);

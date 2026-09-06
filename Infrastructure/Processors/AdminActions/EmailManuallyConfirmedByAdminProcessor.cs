@@ -14,7 +14,8 @@ public class EmailManuallyConfirmedByAdminProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<EmailManuallyConfirmedByAdminProcessor> logger) : IEmailManuallyConfirmedByAdminProcessor
 {
-    public async Task ProcessAsync(EmailManuallyConfirmedByAdminEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(EmailManuallyConfirmedByAdminEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Sender bekreftelsesepost (manuell admin) til bruker {Email}", eventData.Email);
 
@@ -26,12 +27,14 @@ public class EmailManuallyConfirmedByAdminProcessor(
             login_link = loginLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/EmailManuallyConfirmedByAdmin", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("AdminActions/EmailManuallyConfirmedByAdmin",
+                templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "E-postadressen din har blitt bekreftet av administrator",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "E-postadressen din har blitt bekreftet av administrator",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

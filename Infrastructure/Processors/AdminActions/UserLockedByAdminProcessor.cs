@@ -25,9 +25,9 @@ public class UserLockedByAdminProcessor(
         var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserLockedByAdmin", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Kontoen din hos Kjøkkenhylla har blitt sperret",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Kontoen din hos Kjøkkenhylla har blitt sperret",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

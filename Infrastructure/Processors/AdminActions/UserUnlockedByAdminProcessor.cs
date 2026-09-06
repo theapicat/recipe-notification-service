@@ -27,12 +27,13 @@ public class UserUnlockedByAdminProcessor(
             login_link = loginLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserUnlockedByAdmin", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("AdminActions/UserUnlockedByAdmin", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Kontoen din hos Kjøkkenhylla har blitt gjenåpnet",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Kontoen din hos Kjøkkenhylla har blitt gjenåpnet",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

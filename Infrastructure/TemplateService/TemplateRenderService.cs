@@ -7,6 +7,7 @@ namespace Infrastructure.TemplateService;
 public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITemplateRenderService
 {
     private readonly string _templatesFolder = Path.Combine(AppContext.BaseDirectory, "TemplateService", "Templates");
+
     public async Task<string> RenderTemplateAsync<T>(string templateName, T model)
     {
         var filePath = Path.Combine(_templatesFolder, $"{templateName}.html");

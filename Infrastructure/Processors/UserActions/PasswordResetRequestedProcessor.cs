@@ -22,12 +22,13 @@ public class PasswordResetRequestedProcessor(
         };
 
         // Relativ sti oppdatert til UserActions/
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/PasswordResetRequested", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/PasswordResetRequested", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: "Tilbakestill ditt passord på Kjøkkenhylla",
-            htmlBody: htmlBody,
+            eventData.Email,
+            "Tilbakestill ditt passord på Kjøkkenhylla",
+            htmlBody,
             cancellationToken: cancellationToken
         );
     }

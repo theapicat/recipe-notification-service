@@ -30,23 +30,25 @@ public class ContactFormProcessor(
         };
 
         // 1. Send e-post til Administrator / Support (stien oppdatert med UserActions/)
-        var adminHtml = await templateRenderService.RenderTemplateAsync("UserActions/ContactFormAdminNotification", templateModel);
+        var adminHtml =
+            await templateRenderService.RenderTemplateAsync("UserActions/ContactFormAdminNotification", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: _settings.AdminNotificationEmail,
-            subject: $"[Kontaktskjema] {eventData.Subject}",
-            htmlBody: adminHtml,
-            replyTo: eventData.Email,
-            cancellationToken: cancellationToken
+            _settings.AdminNotificationEmail,
+            $"[Kontaktskjema] {eventData.Subject}",
+            adminHtml,
+            eventData.Email,
+            cancellationToken
         );
 
         // 2. Send kvittering til brukeren (stien oppdatert med UserActions/)
-        var userReceiptHtml = await templateRenderService.RenderTemplateAsync("UserActions/ContactFormUserReceipt", templateModel);
+        var userReceiptHtml =
+            await templateRenderService.RenderTemplateAsync("UserActions/ContactFormUserReceipt", templateModel);
 
         await emailDelivery.SendEmailAsync(
-            to: eventData.Email,
-            subject: $"Takk for din henvendelse: {eventData.Subject}",
-            htmlBody: userReceiptHtml,
+            eventData.Email,
+            $"Takk for din henvendelse: {eventData.Subject}",
+            userReceiptHtml,
             cancellationToken: cancellationToken
         );
     }
