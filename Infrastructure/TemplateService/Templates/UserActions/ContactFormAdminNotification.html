@@ -1,77 +1,106 @@
 <!DOCTYPE html>
-<html>
+<html lang="nb">
 <head>
     <meta charset="utf-8">
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
-        }
-
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            border: 1px solid #e0e0e0;
-            border-radius: 8px;
-        }
-
-        .header {
-            background-color: #2e7d32;
-            color: white;
-            padding: 15px;
-            border-radius: 6px 6px 0 0;
-        }
-
-        .content {
-            padding: 20px 0;
-        }
-
-        .field {
-            margin-bottom: 12px;
-        }
-
-        .label {
-            font-weight: bold;
-            color: #555;
-        }
-
-        .message-box {
-            background-color: #f9f9f9;
-            padding: 15px;
-            border-left: 4px solid #2e7d32;
-            margin-top: 8px;
-            white-space: pre-wrap;
-        }
-
-        .footer {
-            font-size: 0.85em;
-            color: #888;
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 10px;
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ny henvendelse fra kontaktskjema</title>
 </head>
-<body>
-<div class="container">
-    <div class="header">
-        <h2 style="margin:0;">Ny henvendelse fra kontaktskjema</h2>
-    </div>
-    <div class="content">
-        <div class="field"><span class="label">Navn:</span> {{ name }}</div>
-        <div class="field"><span class="label">E-post:</span> <a href="mailto:{{ email }}">{{ email }}</a></div>
-        <div class="field"><span class="label">Emne:</span> {{ subject }}</div>
-        <div class="field"><span class="label">Mottatt:</span> {{ submitted_at }}</div>
-        <div class="field">
-            <span class="label">Melding:</span>
-            <div class="message-box">{{ message }}</div>
-        </div>
-    </div>
-    <div class="footer">
-        Denne e-posten ble automatisk generert fra kontaktskjemaet på Kjøkkenhylla.
-    </div>
-</div>
+<body style="margin: 0; padding: 0; background-color: #f7f6f2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #222920;">
+
+<!-- Ytre container -->
+<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f7f6f2; padding: 40px 10px;">
+    <tr>
+        <td align="center">
+
+            <!-- Hovedkort -->
+            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #e2e5df; border-radius: 12px; overflow: hidden; border-collapse: separate;">
+
+                <!-- Header Banner -->
+                <tr>
+                    <td style="background-color: #2a3e30; padding: 24px; text-align: center;">
+                        <table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0">
+                            <tr>
+                                <!-- Kokkelue Logo (Inline SVG) -->
+                                <td style="padding-right: 10px; vertical-align: middle;">
+                                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                        <rect width="32" height="32" rx="8" fill="#5E8C71" />
+                                        <path d="M11 19.5C8.8 19.5 7.8 15.5 10 13.8C9.8 11 13.8 9.8 16 11.2C18.2 9.8 22.2 11 22 13.8C24.2 15.5 23.2 19.5 21 19.5H11Z" fill="white" />
+                                        <rect x="11" y="20.5" width="10" height="3" rx="1" fill="white" />
+                                    </svg>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span style="color: #ffffff; font-size: 20px; font-weight: 700; letter-spacing: -0.3px;">Kjøkkenhylla</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Innholdsområde -->
+                <tr>
+                    <td style="padding: 32px 28px; color: #222920;">
+
+                        <h1 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 700; color: #222920; line-height: 1.3;">
+                            Ny henvendelse fra kontaktskjema
+                        </h1>
+
+                        <!-- Detaljoversikt -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 20px; font-size: 15px; line-height: 1.6;">
+                            <tr>
+                                <td style="padding: 4px 0; color: #596356; width: 80px; vertical-align: top; font-weight: 600;">Navn:</td>
+                                <td style="padding: 4px 0; color: #222920; vertical-align: top;">{{ name }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; color: #596356; vertical-align: top; font-weight: 600;">E-post:</td>
+                                <td style="padding: 4px 0; color: #222920; vertical-align: top;">
+                                    <a href="mailto:{{ email }}" style="color: #4a6b53; text-decoration: underline; font-weight: 600;">{{ email }}</a>
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; color: #596356; vertical-align: top; font-weight: 600;">Emne:</td>
+                                <td style="padding: 4px 0; color: #222920; vertical-align: top;">{{ subject }}</td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 4px 0; color: #596356; vertical-align: top; font-weight: 600;">Mottatt:</td>
+                                <td style="padding: 4px 0; color: #222920; vertical-align: top;">{{ submitted_at }}</td>
+                            </tr>
+                        </table>
+
+                        <p style="margin: 16px 0 8px 0; font-size: 15px; font-weight: 600; color: #2a3e30;">
+                            Melding:
+                        </p>
+
+                        <!-- Melding Boks -->
+                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin-bottom: 8px;">
+                            <tr>
+                                <td style="background-color: #f2f6f3; border-left: 4px solid #4a6b53; padding: 14px 16px; border-radius: 4px; color: #222920; font-size: 14px; line-height: 1.6; white-space: pre-wrap;">{{ message }}</td>
+                            </tr>
+                        </table>
+
+                    </td>
+                </tr>
+
+                <!-- Skillelinje -->
+                <tr>
+                    <td style="padding: 0 28px;">
+                        <hr style="border: none; border-top: 1px solid #e2e5df; margin: 0;">
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="padding: 24px 28px; text-align: center; color: #596356; font-size: 13px; line-height: 1.5;">
+                        <p style="margin: 0;">
+                            Denne e-posten ble automatisk generert fra kontaktskjemaet på Kjøkkenhylla.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
 </body>
 </html>
