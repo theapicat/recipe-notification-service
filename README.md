@@ -1,6 +1,6 @@
 # 📧 Recipe Notification Service
 
-En dedikert, asynkron bakgrunnstjeneste for e-postdistribusjon og varsling i Recipe-plattformen. Tjenesten lytter utelukkende på meldinger fra meldingsbussen (RabbitMQ) og håndterer alt fra bekreftelses-e-poster og passordtilbakestillinger til kontaktskjemaer, oppskriftsdeling og automatisert konto-opprydding.
+En dedikert, asynkron bakgrunnstjeneste for e-postdistribusjon og varsling i Kjøkkenhylla-plattformen. Tjenesten lytter utelukkende på meldinger fra meldingsbussen (RabbitMQ) og håndterer alt fra velkomstmeldinger og passordtilbakestillinger til admin-handlinger, sikkerhetsvarsler og automatisert konto-opprydding.
 
 ---
 
@@ -8,51 +8,20 @@ En dedikert, asynkron bakgrunnstjeneste for e-postdistribusjon og varsling i Rec
 
 * **Lynrask Brukeropplevelse:** E-postutsendelse over SMTP tar tid. Ved å flytte utsendelsen til en egen bakgrunnstjeneste får brukeren umiddelbar respons i applikasjonen, mens e-posten behandles asynkront i bakgrunnen.
 * **Isolasjon av E-postlogikk:** Skiller e-postmaler, HTML-design og e-postleverandører (SMTP/MailKit) helt ut fra `Account API` og `Core API`.
-* **Automatisk Livssyklus & GDPR:** Håndterer påminnelser, deaktivering og permanent sletting av inaktive eller ubekreftede kontoer i henhold til plattformens juridiske brukervilkår.
-* **Vekst & Sosiale Funksjoner:** Støtter vervelenker, invitasjoner og oppskriftsdeling for å skape en naturlig vekstmotor for plattformen.
-* **Enkel Vedlikeholdbarhet:** HTML-maler ligger adskilt fra kildekoden, slik at e-postdesign kan endres uten å røre forretningslogikken.
+* **Strenge Domenegrenser:** Koden og malene er strukturert i tre tydelige domener: `AdminActions`, `SystemActions` og `UserActions`.
+* **Automatisk Livssyklus & GDPR:** Håndterer påminnelser, deaktivering og permanent sletting av ubekreftede kontoer i henhold til plattformens juridiske brukervilkår (§ 3).
+* **Enkel Vedlikeholdbarhet:** HTML-maler ligger adskilt fra kildekoden med inline CSS, slik at e-postdesign kan endres uten å berøre forretningslogikken.
 
 ---
 
-## ⚖️ Konto-livssyklus & Juridiske Frister
+## 🛠️ Teknologistack
 
-Tjenesten orkestrerer e-postvarsler knyttet til brukerkontoenes livssyklus basert på plattformens juridiske brukervilkår:
-
-### 📩 Ubekreftede Kontoer (E-postverifisering)
-
-* **Dag 7:** Første varsel og påminnelse om å bekrefte e-postadressen.
-* **14 dager (2 uker):** Kontoen blir midlertidig **sperret** dersom e-posten fortsatt ikke er bekreftet.
-* **+30 dager etter sperring:** Kontoen og tilhørende data slettes permanent.
-
-### 💤 Inaktive Kontoer
-
-* **6 måneder:** Varsel om inaktivitet sendes til brukeren ("Vi savner deg").
-* **1 år:** Kontoen **sperres** midlertidig på grunn av langvarig inaktivitet.
-* **+30 dager etter sperring:** Kontoen og alle personaliserte data **slettes permanent** (GDPR-opprydding).
-
----
-
-## ✨ Kjerne-features
-
-### 1. 📬 Hendelsesbasert E-postutsendelse (Event-Driven)
-
-* **Support:** Kontaktskjema-henvendelser og automatisk kvittering til avsender.
-* **Konto & Sikkerhet:** Velkomst-e-post, manuell re-utsending av verifisering, og tilbakestilling av passord.
-* **Livssyklus & GDPR:** Påminnelser om ubekreftede/inaktive kontoer, sperrenotiser og bekreftelse på sletting.
-* **Sosialt:** App-anbefalinger til venner, samt deling av oppskrifter med registrerte og uregistrerte brukere.
-
-### 2. 🎨 Dynamiske HTML-Maler (Scriban Engine)
-
-* Benytter ren HTML kombinert med **Scriban** som malmotor.
-* Dynamiske variabler som `{{ name }}`, `{{ subject }}`, `{{ submitted_at }}` fylles inn automatisk fra hendelsene.
-
-### 3. 🧩 Dekoblet Arkitektur & Prosessering
-
-* Skiller skarpt mellom levering (`EmailDeliveryService`), mal-rendering (`EmailTemplateRenderer`) og forretningsorkestrering (`Processors`).
-
-### 4. 🧪 Trygg Lokal Testing (Mailpit)
-
-* Integrert mot **Mailpit** i utviklingsmiljøet (`http://localhost:8025`). Alle e-poster fanges opp i en lokal catch-all-innboks.
+* **Framework:** .NET 10 / C#
+* **Meldingsbuss:** MassTransit 8 (med RabbitMQ som broker)
+* **E-postmotor:** MailKit / MimeKit (SMTP)
+* **Malmotor:** Scriban (HTML-rendering med dynamiske variabler)
+* **Lokal Testing:** Mailpit (`http://localhost:8025`)
+* **Logging:** Serilog
 
 ---
 
@@ -65,10 +34,10 @@ Tjenesten orkestrerer e-postvarsler knyttet til brukerkontoenes livssyklus baser
 1. Consumer (ContactFormSubmittedConsumer)
           │
           ▼ (Passerer melding & CancellationToken)
-2. Processor (ContactFormNotificationProcessor)
+2. Processor (ContactFormProcessor)
           │
-          ├──► Step 1: Render HTML (EmailTemplateRenderer / Scriban)
-          │        └─ Leser mal fra TemplateService/Templates/*.html
+          ├──► Step 1: Render HTML (TemplateRenderService / Scriban)
+          │        └─ Leser mal fra TemplateService/Templates/{Domain}/*.html
           │
           ├──► Step 2: Send e-post (EmailDeliveryService / MailKit)
           │        ├─ E-post 1: Varsel til Support / Admin
@@ -81,54 +50,76 @@ Tjenesten orkestrerer e-postvarsler knyttet til brukerkontoenes livssyklus baser
 
 ---
 
-## 📋 Master-oversikt over E-postmaler
+## 📋 Master-oversikt over E-postmaler & Eventer
 
-| Kategori | Malnavn (`TemplateName`) | Mottaker | Trigger-hendelse / Beskrivelse |
+Alle eventer, consumers, prosessorer og maler er organisert under sine respektive domener:
+
+### 🛡️ 1. AdminActions (Administrative handlinger)
+
+| Malnavn (`TemplateName`) | Trigger-event (`Contracts.Events.AdminActions`) | Mottaker | Beskrivelse |
 | --- | --- | --- | --- |
-| **Support** | `ContactFormAdminNotification` | Admin / Support | `ContactFormSubmittedEvent` (Innsendt kontaktskjema) |
-| **Support** | `ContactFormUserReceipt` | Bruker (Avsender) | `ContactFormSubmittedEvent` (Kvittering på henvendelse) |
-| **Verifisering** | `UserRegisteredWelcome` | Ny bruker | `UserRegisteredEvent` (Velkommen + verifiseringslenke) |
-| **Verifisering** | `EmailVerificationReminder` | Ubekreftet bruker | Automatisk påminnelse om å bekrefte e-post (Dag 7) |
-| **Verifisering** | `EmailVerificationManualRequested` | Ubekreftet bruker | `EmailVerificationRequestedEvent` (Manuell forespørsel om ny lenke) |
-| **Verifisering** | `AccountLockedUnverified` | Ubekreftet bruker | Konto midlertidig sperret pga. unnlatt bekreftelse (Dag 14) |
-| **Sikkerhet** | `PasswordResetRequested` | Bruker | `PasswordResetRequestedEvent` (Glemt passord / gjenoppretting) |
-| **Sikkerhet** | `PasswordChangedSecurityNotice` | Bruker | `PasswordChangedEvent` (Sikkerhetsvarsel om endret passord) |
-| **Livssyklus** | `UserInactivityWarning` | Inaktiv bruker | Varsel om inaktivitet (6 måneder uten innlogging) |
-| **Livssyklus** | `AccountLockedInactivity` | Inaktiv bruker | Konto midlertidig sperret pga. inaktivitet (1 år) |
-| **Sletting** | `AccountSelfDeletedConfirmation` | Bruker | `UserAccountDeletedEvent` (Bruker har slettet kontoen selv) |
-| **Sletting** | `AccountDeletedConfirmation` | Tidligere bruker | Permanent sletting utført etter sperrefrist (+30 dager) |
-| **Sosialt** | `AppRecommendation` | Potensiell bruker | `AppRecommendationSentEvent` (Bruker inviterer en venn) |
-| **Sosialt** | `RecipeSharedExistingUser` | Registrert bruker | `RecipeSharedWithUserEvent` (Deling av oppskrift internt) |
-| **Sosialt** | `RecipeSharedPendingUser` | Potensiell bruker | `RecipeSharedWithNonRegisteredUserEvent` (Deling eksternt) |
-
+| `AdminCustomEmail` | `AdminCustomEmailRequestedEvent` | Enkeltbruker | Egendefinert e-post utsendt manuelt av admin |
+| `EmailManuallyConfirmedByAdmin` | `EmailManuallyConfirmedByAdminEvent` | Bruker | Bekreftelse på at admin har bekreftet e-postadressen |
+| `UserAccountDeletedByAdmin` | `UserAccountDeletedByAdminEvent` | Bruker | Varsel om at kontoen er slettet av admin |
+| `UserDeletedAndBlacklistedByAdmin` | `UserDeletedAndBlacklistedByAdminEvent` | Bruker | Varsel om at kontoen er slettet og e-posten svartelistet |
+| `UserLockedByAdmin` | `UserLockedByAdminEvent` | Bruker | Varsel om at kontoen har blitt sperret med begrunnelse |
+| `UserUnlockedByAdmin` | `UserUnlockedByAdminEvent` | Bruker | Varsel om at kontoen har blitt gjenåpnet av admin |
+| `UserUpdatedByAdmin` | `UserUpdatedByAdminEvent` | Bruker | Varsel om at profilinformasjonen er endret av admin |
 
 ---
 
-## 📋 Sjekkliste for Utvikling
+### ⚙️ 2. SystemActions (Automatiske systemprosesser)
 
-* [x] **1. Infrastruktur & Meldingsbuss (`Infrastructure & Service`)**
-* [x] Opprette oppkobling til RabbitMQ via MassTransit.
-* [x] Etablere `EmailDeliveryService` (MailKit / SMTP).
-* [x] Etablere `EmailTemplateRenderer` (Scriban engine).
-* [x] Konfigurere `<Content>` i `.csproj` for automatisk kopiering av HTML-maler til `bin/`.
+| Malnavn (`TemplateName`) | Trigger-event (`Contracts.Events.SystemActions`) | Mottaker | Beskrivelse |
+| --- | --- | --- | --- |
+| `Confirmation7DaysReminder` | `Confirmation7DaysReminderEvent` | Ubekreftet bruker | Første påminnelse om å bekrefte e-post (Dag 7) |
+| `Confirmation14DaysReminder` | `Confirmation14DaysReminderEvent` | Ubekreftet bruker | Varsel om at kontoen er midlertidig sperret (Dag 14) |
+| `AccountDeletedBySystem` | `AccountDeletedBySystemEvent` | Tidligere bruker | Bekreftelse på permanent sletting (+30 dager fra sperring) |
+
+---
+
+### 👤 3. UserActions (Brukerinitierte handlinger)
+
+| Malnavn (`TemplateName`) | Trigger-event (`Contracts.Events.UserActions`) | Mottaker | Beskrivelse |
+| --- | --- | --- | --- |
+| `UserRegisteredWelcome` | `UserRegisteredEvent` | Ny bruker | Velkomstmelding med bekreftelseslenke |
+| `UserRegisteredWithGoogleWelcome` | `UserRegisteredWithGoogleEvent` | Ny bruker | Velkomstmelding for sømløs Google OAuth-registrering |
+| `ResendEmailConfirmation` | `ResendEmailConfirmationRequestedEvent` | Ubekreftet bruker | Manuell forespørsel om ny bekreftelseslenke |
+| `PasswordResetRequested` | `PasswordResetRequestedEvent` | Bruker | Lenke for tilbakestilling av glemt passord |
+| `PasswordChangedSecurityNotice` | `PasswordChangedEvent` | Bruker | Sikkerhetsvarsel om at passordet har blitt endret |
+| `ContactFormAdminNotification` | `ContactFormSubmittedEvent` | Admin / Support | Varsel til support om ny henvendelse fra kontaktskjema |
+| `ContactFormUserReceipt` | `ContactFormSubmittedEvent` | Avsender | Automatisk bekreftelse/kvittering på henvendelsen |
+| `AccountDeletedByUser` | `AccountDeletedByUserEvent` | Bruker | Bekreftelse på at brukeren selv har slettet kontoen sin |
+
+---
+
+## 🧪 Lokal Testing (Mailpit)
+
+I utviklingsmiljøet sendes ingen e-poster ut til eksterne mottakere. Tjenesten er konfigurert mot **Mailpit**:
+
+1. Start Mailpit lokalt (f.eks. via Docker).
+2. Åpne `http://localhost:8025` i nettleseren.
+3. Alle e-poster utsendt fra bakgrunnstjenesten fanges opp her for inspeksjon av HTML, responsive rammer og dynamiske lenker.
+
+---
+
+## 🚀 Roadmap / Fremtidige Funksjoner
+
+* [ ] **Migrering til OpenTransit:**
+* Per nå benyttes MassTransit 8. Tjenesten planlegges migrert over til **OpenTransit** så snart dette rammeverket ferdigstilles og lanseres som en mer moderne og fleksibel meldingsbuss-løsning.
 
 
-* [x] **2. Kontaktskjema Utsending (`Support Flow`)**
-* [x] Opprette `ContactFormAdminNotification.html` og `ContactFormUserReceipt.html`.
-* [x] Bygge `ContactFormNotificationProcessor` for tosidig utsending (admin + bruker).
-* [x] Bygge `ContactFormSubmittedConsumer` koblet mot RabbitMQ.
+* [ ] **Testdekning med xUnit:**
+* Implementere et dedikert testprosjekt (`Service.Tests`) basert på **xUnit**, **FluentAssertions** og **NSubstitute**.
+* Enhetstester for alle `Processors` og `TemplateRenderService`.
+* Integrasjonstester for rendering av Scriban HTML-maler for å garantere at ingen variabler mangler i e-postene.
 
 
-* [ ] **3. Konto & Sikkerhet (`Account Flow`)**
-* [ ] Bygge prosessor og mal for `UserRegisteredWelcome`.
-* [ ] Bygge prosessor og mal for `PasswordResetRequested`.
-* [ ] Implementere `EmailDeliveryFailedEvent` for feedback loop ved hard bounces.
+* [ ] **Sosiale Funksjoner (`Social Flow`):**
+* `RecipeSharedWithUserEvent` / `RecipeSharedWithNonRegisteredUserEvent`: Deling av oppskrifter med både eksisterende brukere og eksterne venner.
+* `AppRecommendationSentEvent`: Vervelenker og app-invitasjoner.
 
 
-* [ ] **4. Livssyklus & GDPR (`Lifecycle Flow`)**
-* [ ] Bygge maler for 7-dagers og 14-dagers verifiseringsvarsler.
-* [ ] Bygge maler for 6-måneders og 1-års inaktivitetsvarsler.
-
-
-* [ ] **5. Sosiale Funksjoner (`Social Flow`)**
-* [ ] Bygge prosessor og maler for app-anbefaling og oppskriftsdeling.
+* [ ] **Inaktivitetsvarsler (`Inactivity Flow`):**
+* `UserInactivityWarningEvent`: Varsel til brukere som ikke har vært innlogget på 6 måneder ("Vi savner deg").
+* `AccountLockedInactivityEvent`: Midlertidig sperring av kontoer etter 1 års inaktivitet før eventuell GDPR-sletting.
