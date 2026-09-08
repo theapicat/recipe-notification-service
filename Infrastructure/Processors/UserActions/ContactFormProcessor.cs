@@ -10,7 +10,7 @@ namespace Infrastructure.Processors.UserActions;
 
 public class ContactFormProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     IOptions<SmtpSettings> smtpSettings,
     ILogger<ContactFormProcessor> logger) : IContactFormProcessor
 {
@@ -29,27 +29,26 @@ public class ContactFormProcessor(
             submitted_at = eventData.SubmittedAt.ToString("dd.MM.yyyy HH:mm")
         };
 
-        // 1. Send e-post til Administrator / Support (stien oppdatert med UserActions/)
-        var adminHtml =
-            await templateRenderService.RenderTemplateAsync("UserActions/ContactFormAdminNotification", templateModel);
+        // 1. Send e-post til Administrator / Support
+        var adminHtml = await templateRenderService.RenderTemplateAsync("UserActions/ContactFormAdminNotification", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             _settings.AdminNotificationEmail,
             $"[Kontaktskjema] {eventData.Subject}",
             adminHtml,
-            eventData.Email,
+            nameof(ContactFormSubmittedEvent),
             cancellationToken
         );
 
-        // 2. Send kvittering til brukeren (stien oppdatert med UserActions/)
-        var userReceiptHtml =
-            await templateRenderService.RenderTemplateAsync("UserActions/ContactFormUserReceipt", templateModel);
+        // 2. Send kvittering til brukeren
+        var userReceiptHtml = await templateRenderService.RenderTemplateAsync("UserActions/ContactFormUserReceipt", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             $"Takk for din henvendelse: {eventData.Subject}",
             userReceiptHtml,
-            cancellationToken: cancellationToken
+            nameof(ContactFormSubmittedEvent),
+            cancellationToken
         );
     }
 }

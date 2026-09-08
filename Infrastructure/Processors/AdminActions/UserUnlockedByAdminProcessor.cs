@@ -10,13 +10,13 @@ namespace Infrastructure.Processors.AdminActions;
 
 public class UserUnlockedByAdminProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
     ILogger<UserUnlockedByAdminProcessor> logger) : IUserUnlockedByAdminProcessor
 {
     public async Task ProcessAsync(UserUnlockedByAdminEvent eventData, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender gjenåpningsnotifikasjon (admin) til {Email}", eventData.Email);
+        logger.LogInformation("Behandler gjenåpningsnotifikasjon (admin) for {Email}", eventData.Email);
 
         var loginLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/login";
 
@@ -27,14 +27,14 @@ public class UserUnlockedByAdminProcessor(
             login_link = loginLink
         };
 
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("AdminActions/UserUnlockedByAdmin", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserUnlockedByAdmin", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Kontoen din hos Kjøkkenhylla har blitt gjenåpnet",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserUnlockedByAdminEvent),
+            cancellationToken
         );
     }
 }

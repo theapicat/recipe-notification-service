@@ -10,13 +10,13 @@ namespace Infrastructure.Processors.UserActions;
 
 public class UserRegisteredProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
     ILogger<UserRegisteredProcessor> logger) : IUserRegisteredProcessor
 {
     public async Task ProcessAsync(UserRegisteredEvent eventData, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender velkomst-epost til ny bruker {Email}", eventData.Email);
+        logger.LogInformation("Behandler velkomst-epost for ny bruker {Email}", eventData.Email);
 
         var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
 
@@ -27,15 +27,14 @@ public class UserRegisteredProcessor(
             terms_link = termsLink
         };
 
-        // Relativ sti oppdatert til UserActions/
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWelcome", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWelcome", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Velkommen til Kjøkkenhylla! Bekreft din e-postadresse",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserRegisteredEvent),
+            cancellationToken
         );
     }
 }

@@ -8,13 +8,13 @@ namespace Infrastructure.Processors.AdminActions;
 
 public class UserDeletedAndBlacklistedByAdminProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     ILogger<UserDeletedAndBlacklistedByAdminProcessor> logger) : IUserDeletedAndBlacklistedByAdminProcessor
 {
     public async Task ProcessAsync(UserDeletedAndBlacklistedByAdminEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender slette- og svartelistingsmelding (admin) til {Email}", eventData.Email);
+        logger.LogInformation("Behandler slette- og svartelistingsmelding (admin) for {Email}", eventData.Email);
 
         var templateModel = new
         {
@@ -23,15 +23,16 @@ public class UserDeletedAndBlacklistedByAdminProcessor(
             reason = eventData.Reason
         };
 
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("AdminActions/UserDeletedAndBlacklistedByAdmin",
-                templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync(
+            "AdminActions/UserDeletedAndBlacklistedByAdmin",
+            templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Din brukerkonto hos Kjøkkenhylla har blitt slettet og utestengt",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserDeletedAndBlacklistedByAdminEvent),
+            cancellationToken
         );
     }
 }

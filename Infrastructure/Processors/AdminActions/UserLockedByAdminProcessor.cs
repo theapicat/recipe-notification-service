@@ -8,12 +8,12 @@ namespace Infrastructure.Processors.AdminActions;
 
 public class UserLockedByAdminProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     ILogger<UserLockedByAdminProcessor> logger) : IUserLockedByAdminProcessor
 {
     public async Task ProcessAsync(UserLockedByAdminEvent eventData, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender sperrenotifikasjon (admin) til {Email}", eventData.Email);
+        logger.LogInformation("Behandler sperrenotifikasjon (admin) for {Email}", eventData.Email);
 
         var templateModel = new
         {
@@ -24,11 +24,12 @@ public class UserLockedByAdminProcessor(
 
         var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserLockedByAdmin", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Kontoen din hos Kjøkkenhylla har blitt sperret",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserLockedByAdminEvent),
+            cancellationToken
         );
     }
 }

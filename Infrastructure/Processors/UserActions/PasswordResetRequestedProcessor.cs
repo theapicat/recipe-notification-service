@@ -8,12 +8,12 @@ namespace Infrastructure.Processors.UserActions;
 
 public class PasswordResetRequestedProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     ILogger<PasswordResetRequestedProcessor> logger) : IPasswordResetRequestedProcessor
 {
     public async Task ProcessAsync(PasswordResetRequestedEvent eventData, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender instruksjoner for tilbakestilling av passord til {Email}", eventData.Email);
+        logger.LogInformation("Behandler instruksjoner for tilbakestilling av passord for {Email}", eventData.Email);
 
         var templateModel = new
         {
@@ -21,15 +21,14 @@ public class PasswordResetRequestedProcessor(
             reset_link = eventData.ResetLink
         };
 
-        // Relativ sti oppdatert til UserActions/
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("UserActions/PasswordResetRequested", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/PasswordResetRequested", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Tilbakestill ditt passord på Kjøkkenhylla",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(PasswordResetRequestedEvent),
+            cancellationToken
         );
     }
 }

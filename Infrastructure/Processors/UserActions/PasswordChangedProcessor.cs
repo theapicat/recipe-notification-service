@@ -8,12 +8,12 @@ namespace Infrastructure.Processors.UserActions;
 
 public class PasswordChangedProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     ILogger<PasswordChangedProcessor> logger) : IPasswordChangedProcessor
 {
     public async Task ProcessAsync(PasswordChangedEvent eventData, CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender sikkerhetsvarsel om endret passord til {Email}", eventData.Email);
+        logger.LogInformation("Behandler sikkerhetsvarsel om endret passord for {Email}", eventData.Email);
 
         var templateModel = new
         {
@@ -23,15 +23,14 @@ public class PasswordChangedProcessor(
             ip_address = eventData.IpAddress
         };
 
-        // Relativ sti oppdatert til UserActions/
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("UserActions/PasswordChangedSecurityNotice", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/PasswordChangedSecurityNotice", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Sikkerhetsvarsel: Passordet ditt har blitt endret",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(PasswordChangedEvent),
+            cancellationToken
         );
     }
 }

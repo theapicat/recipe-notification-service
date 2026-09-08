@@ -8,13 +8,13 @@ namespace Infrastructure.Processors.UserActions;
 
 public class AccountDeletedByUserProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     ILogger<AccountDeletedByUserProcessor> logger) : IAccountDeletedByUserProcessor
 {
     public async Task ProcessAsync(UserAccountDeletedByUserEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender bekreftelse på brukerstyrt sletting til {Email}", eventData.Email);
+        logger.LogInformation("Behandler bekreftelse på brukerstyrt sletting for {Email}", eventData.Email);
 
         var templateModel = new
         {
@@ -22,15 +22,14 @@ public class AccountDeletedByUserProcessor(
             deleted_at = eventData.DeletedAt.ToString("dd.MM.yyyy HH:mm")
         };
 
-        // Relativ sti oppdatert til UserActions/
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("UserActions/AccountDeletedByUser", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/AccountDeletedByUser", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Bekreftelse på sletting av konto - Kjøkkenhylla",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserAccountDeletedByUserEvent),
+            cancellationToken
         );
     }
 }

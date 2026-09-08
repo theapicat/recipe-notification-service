@@ -10,14 +10,14 @@ namespace Infrastructure.Processors.SystemActions;
 
 public class AccountDeletedBySystemProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
     ILogger<AccountDeletedBySystemProcessor> logger) : IAccountDeletedBySystemProcessor
 {
     public async Task ProcessAsync(UserAccountDeletedBySystemEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender system-slettevarsel til {Email}", eventData.Email);
+        logger.LogInformation("Behandler system-slettevarsel for {Email}", eventData.Email);
 
         var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
 
@@ -28,14 +28,16 @@ public class AccountDeletedBySystemProcessor(
             terms_link = termsLink
         };
 
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("SystemActions/AccountDeletedBySystem", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync(
+            "SystemActions/AccountDeletedBySystem", 
+            templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Din konto hos Kjøkkenhylla har blitt slettet",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserAccountDeletedBySystemEvent),
+            cancellationToken
         );
     }
 }

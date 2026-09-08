@@ -10,14 +10,14 @@ namespace Infrastructure.Processors.UserActions;
 
 public class ResendEmailConfirmationProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
     ILogger<ResendEmailConfirmationProcessor> logger) : IResendEmailConfirmationProcessor
 {
     public async Task ProcessAsync(ResendEmailConfirmationRequestedEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender ny bekreftelses-epost til bruker {Email}", eventData.Email);
+        logger.LogInformation("Behandler ny bekreftelses-epost for bruker {Email}", eventData.Email);
 
         var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
 
@@ -28,15 +28,14 @@ public class ResendEmailConfirmationProcessor(
             terms_link = termsLink
         };
 
-        // Relativ sti oppdatert til UserActions/
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("UserActions/ResendEmailConfirmation", templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/ResendEmailConfirmation", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Bekreft din e-postadresse - Kjøkkenhylla",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(ResendEmailConfirmationRequestedEvent),
+            cancellationToken
         );
     }
 }

@@ -10,14 +10,14 @@ namespace Infrastructure.Processors.UserActions;
 
 public class UserRegisteredWithGoogleProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
     ILogger<UserRegisteredWithGoogleProcessor> logger) : IUserRegisteredWithGoogleProcessor
 {
     public async Task ProcessAsync(UserRegisteredWithGoogleEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender Google-velkomst-epost til ny bruker {Email}", eventData.Email);
+        logger.LogInformation("Behandler Google-velkomst-epost for ny bruker {Email}", eventData.Email);
 
         var frontendUrl = appSettings.Value.FrontendUrl.TrimEnd('/');
         var termsLink = $"{frontendUrl}/legal/terms";
@@ -29,16 +29,16 @@ public class UserRegisteredWithGoogleProcessor(
             terms_link = termsLink
         };
 
-        // Relativ sti oppdatert til UserActions/
-        var htmlBody =
-            await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWithGoogleWelcome",
-                templateModel);
+        var htmlBody = await templateRenderService.RenderTemplateAsync(
+            "UserActions/UserRegisteredWithGoogleWelcome",
+            templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             "Velkommen til Kjøkkenhylla!",
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(UserRegisteredWithGoogleEvent),
+            cancellationToken
         );
     }
 }

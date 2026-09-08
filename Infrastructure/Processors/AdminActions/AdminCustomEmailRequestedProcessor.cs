@@ -8,14 +8,13 @@ namespace Infrastructure.Processors.AdminActions;
 
 public class AdminCustomEmailRequestedProcessor(
     ITemplateRenderService templateRenderService,
-    IEmailDeliveryService emailDelivery,
+    IPendingEmailService pendingEmailService,
     ILogger<AdminCustomEmailRequestedProcessor> logger) : IAdminCustomEmailRequestedProcessor
 {
     public async Task ProcessAsync(AdminCustomEmailRequestedEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Sender e-post fra admin til bruker {Email} med emne '{Subject}'", eventData.Email,
-            eventData.Subject);
+        logger.LogInformation("Behandler e-post fra admin til bruker {Email} med emne '{Subject}'", eventData.Email, eventData.Subject);
 
         var templateModel = new
         {
@@ -26,11 +25,12 @@ public class AdminCustomEmailRequestedProcessor(
 
         var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/AdminCustomEmail", templateModel);
 
-        await emailDelivery.SendEmailAsync(
+        await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,
             eventData.Subject,
             htmlBody,
-            cancellationToken: cancellationToken
+            nameof(AdminCustomEmailRequestedEvent),
+            cancellationToken
         );
     }
 }
