@@ -1,5 +1,6 @@
 using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using MailKit.Net.Smtp;
 using MailKit.Security;
 using Microsoft.Extensions.Logging;
@@ -28,10 +29,7 @@ public class EmailDeliveryService(IOptions<SmtpSettings> settings, ILogger<Email
 
         mimeMessage.Subject = subject;
 
-        var bodyBuilder = new BodyBuilder
-        {
-            HtmlBody = htmlBody
-        };
+        var bodyBuilder = new BodyBuilder { HtmlBody = htmlBody };
         mimeMessage.Body = bodyBuilder.ToMessageBody();
 
         using var client = new SmtpClient();
@@ -52,11 +50,13 @@ public class EmailDeliveryService(IOptions<SmtpSettings> settings, ILogger<Email
         catch (Exception ex)
         {
             logger.LogError(ex, "Feil ved utsending av e-post '{Subject}' til {To}", subject, to);
-            throw;
+            // Pakker inn den rå SMTP-feilen i vår custom EmailDeliveryException
+            throw new EmailDeliveryException($"Klarte ikke å sende e-post til {to} med emne '{subject}'", ex);
         }
         finally
         {
-            await client.DisconnectAsync(true, cancellationToken);
+            if (client.IsConnected)
+                await client.DisconnectAsync(true, cancellationToken);
         }
     }
 }

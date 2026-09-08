@@ -1,5 +1,6 @@
 using MassTransit;
 using Service.Consumers.AdminActions;
+using Service.Consumers.NotificationManagement;
 using Service.Consumers.SystemActions;
 using Service.Consumers.UserActions;
 
@@ -13,27 +14,33 @@ public static class MassTransitExtensions
     {
         services.AddMassTransit(x =>
         {
-            // user actions
-            x.AddConsumer<AccountDeletedBySystemConsumer>();
+            // User Actions
             x.AddConsumer<AccountDeletedByUserConsumer>();
-            x.AddConsumer<Confirmation7DaysReminderConsumer>();
-            x.AddConsumer<Confirmation14DaysReminderConsumer>();
-            x.AddConsumer<ResendEmailConfirmationRequestedConsumer>();
             x.AddConsumer<ContactFormSubmittedConsumer>();
             x.AddConsumer<PasswordChangedConsumer>();
             x.AddConsumer<PasswordResetRequestedConsumer>();
+            x.AddConsumer<ResendEmailConfirmationRequestedConsumer>();
             x.AddConsumer<UserRegisteredConsumer>();
             x.AddConsumer<UserRegisteredWithGoogleConsumer>();
 
-            // admin actions
+            // System Actions
+            x.AddConsumer<AccountDeletedBySystemConsumer>();
+            x.AddConsumer<Confirmation7DaysReminderConsumer>();
+            x.AddConsumer<Confirmation14DaysReminderConsumer>();
+
+            // Admin Actions
+            x.AddConsumer<AdminCustomEmailRequestedConsumer>();
             x.AddConsumer<EmailManuallyConfirmedByAdminConsumer>();
             x.AddConsumer<UserAccountDeletedByAdminConsumer>();
+            x.AddConsumer<UserDeletedAndBlacklistedByAdminConsumer>();
             x.AddConsumer<UserLockedByAdminConsumer>();
             x.AddConsumer<UserUnlockedByAdminConsumer>();
             x.AddConsumer<UserUpdatedByAdminConsumer>();
-            x.AddConsumer<UserDeletedAndBlacklistedByAdminConsumer>();
 
-            x.AddConsumer<AdminCustomEmailRequestedConsumer>();
+            // Notification Management
+            x.AddConsumer<DeleteFailedNotificationCommandConsumer>();
+            x.AddConsumer<GetFailedNotificationsConsumer>();
+            x.AddConsumer<RetryFailedNotificationCommandConsumer>();
 
             x.UsingRabbitMq((context, cfg) =>
             {

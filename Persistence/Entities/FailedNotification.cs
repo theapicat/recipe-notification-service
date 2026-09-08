@@ -17,9 +17,7 @@ public class FailedNotification
     public string LastErrorMessage { get; set; } = string.Empty;
 
     public int RetryCount { get; set; } = 0;
-    public bool IsProcessed { get; set; } = false;
 
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime? LastAttemptAt { get; set; }
-    public DateTime? NextAttemptAt { get; set; }
 }
