@@ -11,6 +11,7 @@ builder.Services.AddMassTransitServices(builder.Configuration);
 builder.Services.AddSmtpService(builder.Configuration);
 builder.Services.AddMailServices();
 builder.Services.AddNotificationProcessors();
+builder.Services.AddMongoDbPersistence(builder.Configuration);
 
 var host = builder.Build();
 host.Run();

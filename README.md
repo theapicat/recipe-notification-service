@@ -14,12 +14,17 @@ En dedikert, asynkron bakgrunnstjeneste for e-postdistribusjon og varsling i Kj�
 
 ---
 
-## 🛠️ Teknologistack
+## 🛠️ Teknologistack & Feilhåndtering
 
 * **Framework:** .NET 10 / C#
 * **Meldingsbuss:** MassTransit 8 (med RabbitMQ som broker)
 * **E-postmotor:** MailKit / MimeKit (SMTP)
 * **Malmotor:** Scriban (HTML-rendering med dynamiske variabler)
+* **Spesifikke Unntak (Custom Exceptions):**
+* `TemplateRenderException`: Kastes dersom en Scriban-mal mangler på disk, har syntaksfeil eller opplever feil under rendering. (Fail-Fast / Intern kildekodefeil).
+* `EmailDeliveryException`: Kastes ved feil under SMTP-overføringen (nettverksproblemer, provider-feil eller feilet tilkobling mot e-posttjener).
+
+
 * **Lokal Testing:** Mailpit (`http://localhost:8025`)
 * **Logging:** Serilog
 
@@ -37,16 +42,34 @@ En dedikert, asynkron bakgrunnstjeneste for e-postdistribusjon og varsling i Kj�
 2. Processor (ContactFormProcessor)
           │
           ├──► Step 1: Render HTML (TemplateRenderService / Scriban)
-          │        └─ Leser mal fra TemplateService/Templates/{Domain}/*.html
+          │        ├─ Leser mal fra TemplateService/Templates/{Domain}/*.html
+          │        └─ Feiler rendering? ──► Kastes TemplateRenderException 🛑 (Fail-Fast)
           │
           ├──► Step 2: Send e-post (EmailDeliveryService / MailKit)
-          │        ├─ E-post 1: Varsel til Support / Admin
-          │        └─ E-post 2: Kvittering til Bruker
+          │        ├─ Sender e-post via SMTP
+          │        └─ Feiler SMTP? ────────► Kastes EmailDeliveryException 🛑 (Ekstern feil)
           │
           └──► Step 3: Feilhåndtering & DLQ
-                   └─ Ved hard bounce/feil kastes exception (MassTransit retry / DLQ) 🛑
+                   └─ Spesifikke exceptions fanges av MassTransit for kontrollert retry eller DLQ 🔁
 
 ```
+
+---
+
+## ⚠️ Unntaksstrategi (Custom Exceptions)
+
+Tjenesten skiller skarpt mellom interne malfeil og eksterne leveransefeil:
+
+1. **`TemplateRenderException` (Kritisk / Intern feil):**
+* **Årsak:** Filen finnes ikke under `Templates/`, syntaksfeil i Scriban-malen, eller ugyldig datamodell.
+* **Håndtering:** Dette er en lokal utviklings-/konfigurasjonsfeil. Prosessoren avbrytes umiddelbart (Fail-Fast) slik at feilen logges høyt i Seq og meldinger stoppes fra å gi ufullstendige e-poster.
+
+
+2. **`EmailDeliveryException` (Ekstern feil):**
+* **Årsak:** SMTP-server er nede, feil ved autentisering, timeout eller nettverksbrudd mot e-postleverandøren.
+* **Håndtering:** Logges som advarsel/feil. Ved transient-feil vil MassTransit utføre re-forsøk (retry policy) før meldingen evt. plasseres i en buffer eller Dead-Letter Queue (DLQ).
+
+
 
 ---
 
@@ -110,9 +133,9 @@ I utviklingsmiljøet sendes ingen e-poster ut til eksterne mottakere. Tjenesten 
 
 
 * [ ] **Testdekning med xUnit:**
-* Implementere et dedikert testprosjekt (`Service.Tests`) basert på **xUnit**, **FluentAssertions** og **NSubstitute**.
-* Enhetstester for alle `Processors` og `TemplateRenderService`.
-* Integrasjonstester for rendering av Scriban HTML-maler for å garantere at ingen variabler mangler i e-postene.
+* Implementere et dedikert testprosjekt (`Service.Tests`) basert på **xUnit**, **Shouldly** / **FluentAssertions (v6.12.2)** og **NSubstitute**.
+* Enhetstester for alle `Processors` med verifisering av `TemplateRenderException` og `EmailDeliveryException`.
+* Integrasjonstester for rendering av Scriban HTML-maler via `TemplateRenderService`.
 
 
 * [ ] **Sosiale Funksjoner (`Social Flow`):**
