@@ -28,7 +28,8 @@ public class ResendEmailConfirmationProcessor(
             terms_link = termsLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/ResendEmailConfirmation", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/ResendEmailConfirmation", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

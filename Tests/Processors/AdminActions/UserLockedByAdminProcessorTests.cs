@@ -4,17 +4,18 @@ using Infrastructure.Processors.AdminActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.AdminActions;
 
 public class UserLockedByAdminProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+    private readonly ILogger<UserLockedByAdminProcessor>
+        _logger = Substitute.For<ILogger<UserLockedByAdminProcessor>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly ILogger<UserLockedByAdminProcessor> _logger = Substitute.For<ILogger<UserLockedByAdminProcessor>>();
 
     private readonly UserLockedByAdminProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public UserLockedByAdminProcessorTests()
     {

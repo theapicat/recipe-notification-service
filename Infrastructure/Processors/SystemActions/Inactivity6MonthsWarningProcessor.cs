@@ -14,7 +14,8 @@ public class Inactivity6MonthsWarningProcessor(
     IOptions<AppSettings> appSettings,
     ILogger<Inactivity6MonthsWarningProcessor> logger) : IInactivity6MonthsWarningProcessor
 {
-    public async Task ProcessAsync(Inactivity6MonthsWarningEvent eventData, CancellationToken cancellationToken = default)
+    public async Task ProcessAsync(Inactivity6MonthsWarningEvent eventData,
+        CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Behandler 6-måneders inaktivitetsvarsel for {Email}", eventData.Email);
 

@@ -14,7 +14,8 @@ public class AdminCustomEmailRequestedProcessor(
     public async Task ProcessAsync(AdminCustomEmailRequestedEvent eventData,
         CancellationToken cancellationToken = default)
     {
-        logger.LogInformation("Behandler e-post fra admin til bruker {Email} med emne '{Subject}'", eventData.Email, eventData.Subject);
+        logger.LogInformation("Behandler e-post fra admin til bruker {Email} med emne '{Subject}'", eventData.Email,
+            eventData.Subject);
 
         var templateModel = new
         {

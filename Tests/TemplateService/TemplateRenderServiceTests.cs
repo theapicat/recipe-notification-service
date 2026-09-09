@@ -3,7 +3,6 @@ using Infrastructure.TemplateService;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
-using Xunit;
 
 namespace Tests.TemplateService;
 

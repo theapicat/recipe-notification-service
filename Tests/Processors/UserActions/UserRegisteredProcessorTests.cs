@@ -8,18 +8,19 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Processors.UserActions;
 
 public class UserRegisteredProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
-    private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly IOptions<AppSettings> _appSettings = Options.Create(new AppSettings { FrontendUrl = "https://kjokkenhylla.no" });
+    private readonly IOptions<AppSettings> _appSettings =
+        Options.Create(new AppSettings { FrontendUrl = "https://kjokkenhylla.no" });
+
     private readonly ILogger<UserRegisteredProcessor> _logger = Substitute.For<ILogger<UserRegisteredProcessor>>();
+    private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
 
     private readonly UserRegisteredProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public UserRegisteredProcessorTests()
     {
@@ -86,6 +87,6 @@ public class UserRegisteredProcessorTests
             _processor.ProcessAsync(@event, CancellationToken.None));
 
         await _pendingEmailService.DidNotReceiveWithAnyArgs()
-            .ProcessEmailWithRetryAsync(default!, default!, default!, default!, default);
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

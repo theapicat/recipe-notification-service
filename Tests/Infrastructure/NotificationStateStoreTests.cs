@@ -1,6 +1,5 @@
 using Infrastructure.State;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Infrastructure;
 

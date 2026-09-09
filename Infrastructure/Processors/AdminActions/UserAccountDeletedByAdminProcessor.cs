@@ -23,7 +23,7 @@ public class UserAccountDeletedByAdminProcessor(
         };
 
         var htmlBody = await templateRenderService.RenderTemplateAsync(
-            "AdminActions/UserAccountDeletedByAdmin", 
+            "AdminActions/UserAccountDeletedByAdmin",
             templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(

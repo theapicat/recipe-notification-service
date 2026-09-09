@@ -25,14 +25,14 @@ public class PendingEmailService(
         string eventType,
         CancellationToken cancellationToken = default)
     {
-        string lastErrorMessage = string.Empty;
+        var lastErrorMessage = string.Empty;
 
         for (var attempt = 1; attempt <= MaxAttempts; attempt++)
-        {
             try
             {
-                logger.LogInformation("Utsendingsforsøk {Attempt}/{MaxAttempts} for e-post til {To}", attempt, MaxAttempts, to);
-                
+                logger.LogInformation("Utsendingsforsøk {Attempt}/{MaxAttempts} for e-post til {To}", attempt,
+                    MaxAttempts, to);
+
                 await emailDeliveryService.SendEmailAsync(to, subject, htmlBody, cancellationToken: cancellationToken);
                 return; // Vellykket utsending
             }
@@ -56,15 +56,12 @@ public class PendingEmailService(
                     return;
                 }
 
-                if (attempt < MaxAttempts)
-                {
-                    await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
-                }
+                if (attempt < MaxAttempts) await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
             }
-        }
 
         // Alle 5 in-line forsøk feilet -> Lagre i MongoDB-buffer
-        logger.LogError("Alle {MaxAttempts} in-line forsøk feilet for e-post til {To}. Lagrer i MongoDB.", MaxAttempts, to);
+        logger.LogError("Alle {MaxAttempts} in-line forsøk feilet for e-post til {To}. Lagrer i MongoDB.", MaxAttempts,
+            to);
 
         var failedNotification = new FailedNotification
         {
@@ -85,10 +82,7 @@ public class PendingEmailService(
     private static bool IsHardBounce(EmailDeliveryException ex)
     {
         var message = ex.Message.ToLowerInvariant();
-        if (ex.InnerException != null)
-        {
-            message += " " + ex.InnerException.Message.ToLowerInvariant();
-        }
+        if (ex.InnerException != null) message += " " + ex.InnerException.Message.ToLowerInvariant();
 
         return message.Contains("550") ||
                message.Contains("user unknown") ||
@@ -97,7 +91,8 @@ public class PendingEmailService(
                message.Contains("does not exist");
     }
 
-    private async Task HandleAdminNotificationAsync(string recipient, string subject, string errorMessage, CancellationToken cancellationToken)
+    private async Task HandleAdminNotificationAsync(string recipient, string subject, string errorMessage,
+        CancellationToken cancellationToken)
     {
         if (!stateStore.HasNotifiedAdmin)
         {
@@ -115,7 +110,9 @@ public class PendingEmailService(
                                 $"<p><b>Emne:</b> {subject}</p>" +
                                 $"<p><b>Siste feil:</b> {errorMessage}</p>";
 
-                await emailDeliveryService.SendEmailAsync(adminEmail, "[KRITISK] E-postutsendelse feilet i Kjøkkenhylla", adminBody, cancellationToken: cancellationToken);
+                await emailDeliveryService.SendEmailAsync(adminEmail,
+                    "[KRITISK] E-postutsendelse feilet i Kjøkkenhylla", adminBody,
+                    cancellationToken: cancellationToken);
             }
             catch (Exception ex)
             {

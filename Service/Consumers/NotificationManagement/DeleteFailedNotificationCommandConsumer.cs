@@ -8,7 +8,7 @@ namespace Service.Consumers.NotificationManagement;
 public class DeleteFailedNotificationCommandConsumer(
     IFailedNotificationRepository repository,
     INotificationStateStore stateStore,
-    ILogger<DeleteFailedNotificationCommandConsumer> logger) 
+    ILogger<DeleteFailedNotificationCommandConsumer> logger)
     : IConsumer<DeleteFailedNotificationCommand>
 {
     public async Task Consume(ConsumeContext<DeleteFailedNotificationCommand> context)

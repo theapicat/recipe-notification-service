@@ -27,7 +27,8 @@ public class UserUnlockedByAdminProcessor(
             login_link = loginLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserUnlockedByAdmin", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("AdminActions/UserUnlockedByAdmin", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

@@ -4,7 +4,7 @@ using Persistence.Repositories.Interfaces;
 
 namespace Service.Consumers.NotificationManagement;
 
-public class GetFailedNotificationsConsumer(IFailedNotificationRepository repository) 
+public class GetFailedNotificationsConsumer(IFailedNotificationRepository repository)
     : IConsumer<GetFailedNotificationsQuery>
 {
     public async Task Consume(ConsumeContext<GetFailedNotificationsQuery> context)

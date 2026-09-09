@@ -7,7 +7,6 @@ using Persistence.Entities;
 using Persistence.Repositories.Interfaces;
 using Service.Consumers.NotificationManagement;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Consumers.NotificationManagement;
 
@@ -38,10 +37,7 @@ public class GetFailedNotificationsConsumerTests
             .Returns(Task.FromResult(mockFailedNotifications));
 
         await using var provider = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                x.AddConsumer<GetFailedNotificationsConsumer>();
-            })
+            .AddMassTransitTestHarness(x => { x.AddConsumer<GetFailedNotificationsConsumer>(); })
             .AddSingleton(_repository)
             .BuildServiceProvider(true);
 

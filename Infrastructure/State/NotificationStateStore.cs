@@ -14,10 +14,7 @@ public class NotificationStateStore : INotificationStateStore
         lock (_lock)
         {
             HasPendingNotifications = hasPending;
-            if (!hasPending)
-            {
-                HasNotifiedAdmin = false;
-            }
+            if (!hasPending) HasNotifiedAdmin = false;
         }
     }
 

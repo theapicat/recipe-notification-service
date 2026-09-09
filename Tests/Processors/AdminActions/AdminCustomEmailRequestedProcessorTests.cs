@@ -6,17 +6,18 @@ using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Processors.AdminActions;
 
 public class AdminCustomEmailRequestedProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+    private readonly ILogger<AdminCustomEmailRequestedProcessor> _logger =
+        Substitute.For<ILogger<AdminCustomEmailRequestedProcessor>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly ILogger<AdminCustomEmailRequestedProcessor> _logger = Substitute.For<ILogger<AdminCustomEmailRequestedProcessor>>();
 
     private readonly AdminCustomEmailRequestedProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public AdminCustomEmailRequestedProcessorTests()
     {
@@ -84,6 +85,6 @@ public class AdminCustomEmailRequestedProcessorTests
             _processor.ProcessAsync(@event, CancellationToken.None));
 
         await _pendingEmailService.DidNotReceiveWithAnyArgs()
-            .ProcessEmailWithRetryAsync(default!, default!, default!, default!, default);
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

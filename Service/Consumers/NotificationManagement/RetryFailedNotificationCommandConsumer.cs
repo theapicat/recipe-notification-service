@@ -2,7 +2,6 @@ using Contracts.Commands.NotificationManagement;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.State.Interfaces;
 using MassTransit;
-using Microsoft.Extensions.Logging;
 using Persistence.Repositories.Interfaces;
 
 namespace Service.Consumers.NotificationManagement;
@@ -11,7 +10,7 @@ public class RetryFailedNotificationCommandConsumer(
     IFailedNotificationRepository repository,
     IPendingEmailService pendingEmailService,
     INotificationStateStore stateStore,
-    ILogger<RetryFailedNotificationCommandConsumer> logger) 
+    ILogger<RetryFailedNotificationCommandConsumer> logger)
     : IConsumer<RetryFailedNotificationCommand>
 {
     public async Task Consume(ConsumeContext<RetryFailedNotificationCommand> context)

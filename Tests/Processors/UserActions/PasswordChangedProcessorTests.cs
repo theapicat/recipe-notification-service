@@ -4,17 +4,16 @@ using Infrastructure.Processors.UserActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.UserActions;
 
 public class PasswordChangedProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
-    private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
     private readonly ILogger<PasswordChangedProcessor> _logger = Substitute.For<ILogger<PasswordChangedProcessor>>();
+    private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
 
     private readonly PasswordChangedProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public PasswordChangedProcessorTests()
     {

@@ -23,7 +23,8 @@ public class UserUpdatedByAdminProcessor(
             updated_at = eventData.UpdatedAt.ToString("dd.MM.yyyy HH:mm")
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserUpdatedByAdmin", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("AdminActions/UserUpdatedByAdmin", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

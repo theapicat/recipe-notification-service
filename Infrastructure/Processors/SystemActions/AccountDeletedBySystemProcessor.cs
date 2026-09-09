@@ -29,7 +29,7 @@ public class AccountDeletedBySystemProcessor(
         };
 
         var htmlBody = await templateRenderService.RenderTemplateAsync(
-            "SystemActions/AccountDeletedBySystem", 
+            "SystemActions/AccountDeletedBySystem",
             templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(

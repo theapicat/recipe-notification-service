@@ -23,7 +23,8 @@ public class PasswordChangedProcessor(
             ip_address = eventData.IpAddress
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/PasswordChangedSecurityNotice", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/PasswordChangedSecurityNotice", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

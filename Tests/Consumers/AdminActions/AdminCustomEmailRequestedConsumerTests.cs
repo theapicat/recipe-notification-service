@@ -7,24 +7,23 @@ using Microsoft.Extensions.Logging;
 using NSubstitute;
 using Service.Consumers.AdminActions;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Consumers.AdminActions;
 
 public class AdminCustomEmailRequestedConsumerTests
 {
-    private readonly IAdminCustomEmailRequestedProcessor _processor = Substitute.For<IAdminCustomEmailRequestedProcessor>();
-    private readonly ILogger<AdminCustomEmailRequestedConsumer> _logger = Substitute.For<ILogger<AdminCustomEmailRequestedConsumer>>();
+    private readonly ILogger<AdminCustomEmailRequestedConsumer> _logger =
+        Substitute.For<ILogger<AdminCustomEmailRequestedConsumer>>();
+
+    private readonly IAdminCustomEmailRequestedProcessor _processor =
+        Substitute.For<IAdminCustomEmailRequestedProcessor>();
 
     [Fact]
     public async Task Consume_WhenEventReceived_ShouldInvokeProcessor()
     {
         // Arrange
         await using var provider = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                x.AddConsumer<AdminCustomEmailRequestedConsumer>();
-            })
+            .AddMassTransitTestHarness(x => { x.AddConsumer<AdminCustomEmailRequestedConsumer>(); })
             .AddSingleton(_processor)
             .AddSingleton(_logger)
             .BuildServiceProvider(true);
@@ -49,6 +48,7 @@ public class AdminCustomEmailRequestedConsumerTests
         (await harness.Consumed.Any<AdminCustomEmailRequestedEvent>()).ShouldBeTrue();
 
         await _processor.Received(1)
-            .ProcessAsync(Arg.Is<AdminCustomEmailRequestedEvent>(e => e.Email == @event.Email), Arg.Any<CancellationToken>());
+            .ProcessAsync(Arg.Is<AdminCustomEmailRequestedEvent>(e => e.Email == @event.Email),
+                Arg.Any<CancellationToken>());
     }
 }

@@ -9,5 +9,5 @@ public class SmtpSettings
     public bool EnableSsl { get; set; } = false;
     public string DefaultSenderEmail { get; set; }
     public string DefaultSenderName { get; set; }
-    public string AdminNotificationEmail { get; set; } 
+    public string AdminNotificationEmail { get; set; }
 }

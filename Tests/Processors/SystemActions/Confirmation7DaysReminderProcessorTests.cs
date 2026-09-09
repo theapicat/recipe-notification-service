@@ -6,18 +6,21 @@ using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.SystemActions;
 
 public class Confirmation7DaysReminderProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+    private readonly IOptions<AppSettings> _appSettings =
+        Options.Create(new AppSettings { FrontendUrl = "https://kjokkenhylla.no" });
+
+    private readonly ILogger<Confirmation7DaysReminderProcessor> _logger =
+        Substitute.For<ILogger<Confirmation7DaysReminderProcessor>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly IOptions<AppSettings> _appSettings = Options.Create(new AppSettings { FrontendUrl = "https://kjokkenhylla.no" });
-    private readonly ILogger<Confirmation7DaysReminderProcessor> _logger = Substitute.For<ILogger<Confirmation7DaysReminderProcessor>>();
 
     private readonly Confirmation7DaysReminderProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public Confirmation7DaysReminderProcessorTests()
     {

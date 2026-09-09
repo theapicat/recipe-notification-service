@@ -22,7 +22,8 @@ public class AccountDeletedByUserProcessor(
             deleted_at = eventData.DeletedAt.ToString("dd.MM.yyyy HH:mm")
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/AccountDeletedByUser", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/AccountDeletedByUser", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

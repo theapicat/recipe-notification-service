@@ -27,7 +27,8 @@ public class UserRegisteredProcessor(
             terms_link = termsLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWelcome", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/UserRegisteredWelcome", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

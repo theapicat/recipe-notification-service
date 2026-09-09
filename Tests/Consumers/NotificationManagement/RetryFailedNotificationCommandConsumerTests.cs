@@ -10,16 +10,17 @@ using Persistence.Entities;
 using Persistence.Repositories.Interfaces;
 using Service.Consumers.NotificationManagement;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Consumers.NotificationManagement;
 
 public class RetryFailedNotificationCommandConsumerTests
 {
-    private readonly IFailedNotificationRepository _repository = Substitute.For<IFailedNotificationRepository>();
+    private readonly ILogger<RetryFailedNotificationCommandConsumer> _logger =
+        Substitute.For<ILogger<RetryFailedNotificationCommandConsumer>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
+    private readonly IFailedNotificationRepository _repository = Substitute.For<IFailedNotificationRepository>();
     private readonly INotificationStateStore _stateStore = Substitute.For<INotificationStateStore>();
-    private readonly ILogger<RetryFailedNotificationCommandConsumer> _logger = Substitute.For<ILogger<RetryFailedNotificationCommandConsumer>>();
 
     [Fact]
     public async Task Consume_WhenRetryCommandReceived_ShouldResetRetryCountProcessEmailAndRemoveFromDb()
@@ -47,10 +48,7 @@ public class RetryFailedNotificationCommandConsumerTests
             .Returns(Task.FromResult(0L)); // Bufferen er tom etter at denne er slettet
 
         await using var provider = new ServiceCollection()
-            .AddMassTransitTestHarness(x =>
-            {
-                x.AddConsumer<RetryFailedNotificationCommandConsumer>();
-            })
+            .AddMassTransitTestHarness(x => { x.AddConsumer<RetryFailedNotificationCommandConsumer>(); })
             .AddSingleton(_repository)
             .AddSingleton(_pendingEmailService)
             .AddSingleton(_stateStore)
@@ -74,7 +72,8 @@ public class RetryFailedNotificationCommandConsumerTests
 
         // 2. Sender e-post på nytt via PendingEmailService
         await _pendingEmailService.Received(1)
-            .ProcessEmailWithRetryAsync("retry@example.com", "Emne", "<html>Body</html>", "UserRegisteredEvent", Arg.Any<CancellationToken>());
+            .ProcessEmailWithRetryAsync("retry@example.com", "Emne", "<html>Body</html>", "UserRegisteredEvent",
+                Arg.Any<CancellationToken>());
 
         // 3. Sletter fra MongoDB
         await _repository.Received(1)

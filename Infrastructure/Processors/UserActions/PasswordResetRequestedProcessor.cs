@@ -21,7 +21,8 @@ public class PasswordResetRequestedProcessor(
             reset_link = eventData.ResetLink
         };
 
-        var htmlBody = await templateRenderService.RenderTemplateAsync("UserActions/PasswordResetRequested", templateModel);
+        var htmlBody =
+            await templateRenderService.RenderTemplateAsync("UserActions/PasswordResetRequested", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

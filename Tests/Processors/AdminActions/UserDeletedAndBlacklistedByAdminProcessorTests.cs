@@ -4,17 +4,18 @@ using Infrastructure.Processors.AdminActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.AdminActions;
 
 public class UserDeletedAndBlacklistedByAdminProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+    private readonly ILogger<UserDeletedAndBlacklistedByAdminProcessor> _logger =
+        Substitute.For<ILogger<UserDeletedAndBlacklistedByAdminProcessor>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly ILogger<UserDeletedAndBlacklistedByAdminProcessor> _logger = Substitute.For<ILogger<UserDeletedAndBlacklistedByAdminProcessor>>();
 
     private readonly UserDeletedAndBlacklistedByAdminProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public UserDeletedAndBlacklistedByAdminProcessorTests()
     {

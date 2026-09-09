@@ -15,7 +15,8 @@ public interface IFailedNotificationRepository
     Task ResetRetryCountManyAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default);
 
     // Henting for bakgrunnsjobben (Henter KUN de som har RetryCount < maxRetryCount, f.eks. < 5)
-    Task<List<FailedNotification>> GetPendingBatchAsync(int maxRetryCount = 5, int batchSize = 50, CancellationToken cancellationToken = default);
+    Task<List<FailedNotification>> GetPendingBatchAsync(int maxRetryCount = 5, int batchSize = 50,
+        CancellationToken cancellationToken = default);
 
     // Innsyn for Admin & Dashbord
     Task<long> GetPendingCountAsync(CancellationToken cancellationToken = default);

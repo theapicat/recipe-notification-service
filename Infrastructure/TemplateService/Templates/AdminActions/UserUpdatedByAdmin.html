@@ -2,30 +2,34 @@
 <html lang="nb">
 <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
     <title>Profilen din har blitt oppdatert</title>
 </head>
 <body style="margin: 0; padding: 0; background-color: #f7f6f2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #222920;">
 
 <!-- Ytre container -->
-<table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background-color: #f7f6f2; padding: 40px 10px;">
+<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f7f6f2; padding: 40px 10px;"
+       width="100%">
     <tr>
         <td align="center">
 
             <!-- Hovedkort -->
-            <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width: 560px; background-color: #ffffff; border: 1px solid #e2e5df; border-radius: 12px; overflow: hidden; border-collapse: separate;">
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 560px; background-color: #ffffff; border: 1px solid #e2e5df; border-radius: 12px; overflow: hidden; border-collapse: separate;"
+                   width="100%">
 
                 <!-- Header Banner -->
                 <tr>
                     <td style="background-color: #2a3e30; padding: 24px; text-align: center;">
-                        <table role="presentation" align="center" cellspacing="0" cellpadding="0" border="0">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation">
                             <tr>
                                 <!-- Kokkelue Logo (Inline SVG) -->
                                 <td style="padding-right: 10px; vertical-align: middle;">
-                                    <svg width="28" height="28" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                                        <rect width="32" height="32" rx="8" fill="#5E8C71" />
-                                        <path d="M11 19.5C8.8 19.5 7.8 15.5 10 13.8C9.8 11 13.8 9.8 16 11.2C18.2 9.8 22.2 11 22 13.8C24.2 15.5 23.2 19.5 21 19.5H11Z" fill="white" />
-                                        <rect x="11" y="20.5" width="10" height="3" rx="1" fill="white" />
+                                    <svg fill="none" height="28" viewBox="0 0 32 32" width="28"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <rect fill="#5E8C71" height="32" rx="8" width="32"/>
+                                        <path d="M11 19.5C8.8 19.5 7.8 15.5 10 13.8C9.8 11 13.8 9.8 16 11.2C18.2 9.8 22.2 11 22 13.8C24.2 15.5 23.2 19.5 21 19.5H11Z"
+                                              fill="white"/>
+                                        <rect fill="white" height="3" rx="1" width="10" x="11" y="20.5"/>
                                     </svg>
                                 </td>
                                 <td style="vertical-align: middle;">
@@ -49,21 +53,26 @@
                         </p>
 
                         <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #222920;">
-                            Vi informerer om at en administrator har oppdatert profilinformasjonen din hos Kjøkkenhylla den <strong>{{ updated_at }}</strong>.
+                            Vi informerer om at en administrator har oppdatert profilinformasjonen din hos Kjøkkenhylla
+                            den <strong>{{ updated_at }}</strong>.
                         </p>
 
                         <!-- Infoboks med Sage-aksent -->
-                        <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="margin: 24px 0;">
+                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 24px 0;"
+                               width="100%">
                             <tr>
                                 <td style="background-color: #f2f6f3; border-left: 4px solid #4a6b53; padding: 14px 16px; border-radius: 4px; color: #222920; font-size: 14px; line-height: 1.5;">
-                                    <strong style="color: #2a3e30; display: block; margin-bottom: 4px;">Endringer gjennomført:</strong>
-                                    Dersom e-postadressen din ble endret, har den blitt oppdatert fra <em>{{ old_email }}</em> til <strong>{{ new_email }}</strong>.
+                                    <strong style="color: #2a3e30; display: block; margin-bottom: 4px;">Endringer
+                                        gjennomført:</strong>
+                                    Dersom e-postadressen din ble endret, har den blitt oppdatert fra <em>{{ old_email
+                                    }}</em> til <strong>{{ new_email }}</strong>.
                                 </td>
                             </tr>
                         </table>
 
                         <p style="margin: 20px 0 0 0; font-size: 14px; line-height: 1.5; color: #596356;">
-                            Dersom du ikke var klar over denne endringen eller mener at dette er en feil, vennligst ta kontakt med vår support umiddelbart.
+                            Dersom du ikke var klar over denne endringen eller mener at dette er en feil, vennligst ta
+                            kontakt med vår support umiddelbart.
                         </p>
 
                     </td>

@@ -6,21 +6,22 @@ using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.UserActions;
 
 public class ContactFormProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
-    private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly IOptions<SmtpSettings> _smtpSettings = Options.Create(new SmtpSettings 
-    { 
-        AdminNotificationEmail = "admin@kjokkenhylla.no" 
-    });
     private readonly ILogger<ContactFormProcessor> _logger = Substitute.For<ILogger<ContactFormProcessor>>();
+    private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
 
     private readonly ContactFormProcessor _processor;
+
+    private readonly IOptions<SmtpSettings> _smtpSettings = Options.Create(new SmtpSettings
+    {
+        AdminNotificationEmail = "admin@kjokkenhylla.no"
+    });
+
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public ContactFormProcessorTests()
     {

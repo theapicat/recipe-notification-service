@@ -29,7 +29,7 @@ public class Confirmation7DaysReminderProcessor(
         };
 
         var htmlBody = await templateRenderService.RenderTemplateAsync(
-            "SystemActions/Confirmation7DaysReminder", 
+            "SystemActions/Confirmation7DaysReminder",
             templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(

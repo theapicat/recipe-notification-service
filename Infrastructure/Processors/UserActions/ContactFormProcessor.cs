@@ -30,7 +30,8 @@ public class ContactFormProcessor(
         };
 
         // 1. Send e-post til Administrator / Support
-        var adminHtml = await templateRenderService.RenderTemplateAsync("UserActions/ContactFormAdminNotification", templateModel);
+        var adminHtml =
+            await templateRenderService.RenderTemplateAsync("UserActions/ContactFormAdminNotification", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             _settings.AdminNotificationEmail,
@@ -41,7 +42,8 @@ public class ContactFormProcessor(
         );
 
         // 2. Send kvittering til brukeren
-        var userReceiptHtml = await templateRenderService.RenderTemplateAsync("UserActions/ContactFormUserReceipt", templateModel);
+        var userReceiptHtml =
+            await templateRenderService.RenderTemplateAsync("UserActions/ContactFormUserReceipt", templateModel);
 
         await pendingEmailService.ProcessEmailWithRetryAsync(
             eventData.Email,

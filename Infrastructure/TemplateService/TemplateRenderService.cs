@@ -17,7 +17,8 @@ public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITem
         if (!File.Exists(filePath))
         {
             logger.LogError("E-postmalen ble ikke funnet på stien: {FilePath}", filePath);
-            throw new TemplateRenderException($"E-postmalen '{templateName}.html' ble ikke funnet på stien: {filePath}");
+            throw new TemplateRenderException(
+                $"E-postmalen '{templateName}.html' ble ikke funnet på stien: {filePath}");
         }
 
         string templateSource;

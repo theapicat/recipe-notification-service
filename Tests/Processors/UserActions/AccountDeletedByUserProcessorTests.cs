@@ -4,17 +4,18 @@ using Infrastructure.Processors.UserActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.UserActions;
 
 public class AccountDeletedByUserProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+    private readonly ILogger<AccountDeletedByUserProcessor> _logger =
+        Substitute.For<ILogger<AccountDeletedByUserProcessor>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly ILogger<AccountDeletedByUserProcessor> _logger = Substitute.For<ILogger<AccountDeletedByUserProcessor>>();
 
     private readonly AccountDeletedByUserProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public AccountDeletedByUserProcessorTests()
     {

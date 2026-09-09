@@ -6,18 +6,21 @@ using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
-using Xunit;
 
 namespace Tests.Processors.AdminActions;
 
 public class UserUnlockedByAdminProcessorTests
 {
-    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+    private readonly IOptions<AppSettings> _appSettings =
+        Options.Create(new AppSettings { FrontendUrl = "https://kjokkenhylla.no" });
+
+    private readonly ILogger<UserUnlockedByAdminProcessor> _logger =
+        Substitute.For<ILogger<UserUnlockedByAdminProcessor>>();
+
     private readonly IPendingEmailService _pendingEmailService = Substitute.For<IPendingEmailService>();
-    private readonly IOptions<AppSettings> _appSettings = Options.Create(new AppSettings { FrontendUrl = "https://kjokkenhylla.no" });
-    private readonly ILogger<UserUnlockedByAdminProcessor> _logger = Substitute.For<ILogger<UserUnlockedByAdminProcessor>>();
 
     private readonly UserUnlockedByAdminProcessor _processor;
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
 
     public UserUnlockedByAdminProcessorTests()
     {

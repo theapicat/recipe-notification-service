@@ -10,19 +10,21 @@ using NSubstitute.ExceptionExtensions;
 using Persistence.Entities;
 using Persistence.Repositories.Interfaces;
 using Shouldly;
-using Xunit;
 
 namespace Tests.Infrastructure;
 
 public class PendingEmailServiceTests
 {
     private readonly IEmailDeliveryService _emailDeliveryService = Substitute.For<IEmailDeliveryService>();
-    private readonly IFailedNotificationRepository _failedNotificationRepository = Substitute.For<IFailedNotificationRepository>();
-    private readonly NotificationStateStore _stateStore = new();
-    private readonly IPublishEndpoint _publishEndpoint = Substitute.For<IPublishEndpoint>();
+
+    private readonly IFailedNotificationRepository _failedNotificationRepository =
+        Substitute.For<IFailedNotificationRepository>();
+
     private readonly ILogger<PendingEmailService> _logger = Substitute.For<ILogger<PendingEmailService>>();
+    private readonly IPublishEndpoint _publishEndpoint = Substitute.For<IPublishEndpoint>();
 
     private readonly PendingEmailService _service;
+    private readonly NotificationStateStore _stateStore = new();
 
     public PendingEmailServiceTests()
     {
@@ -92,7 +94,8 @@ public class PendingEmailServiceTests
     [InlineData("Recipient address rejected: Access denied")]
     [InlineData("Mailbox unavailable")]
     [InlineData("Address does not exist")]
-    public async Task ProcessEmailWithRetryAsync_WhenHardBounce_ShouldPublishInvalidEmailDetectedEventAndAbort(string errorMessage)
+    public async Task ProcessEmailWithRetryAsync_WhenHardBounce_ShouldPublishInvalidEmailDetectedEventAndAbort(
+        string errorMessage)
     {
         // Arrange
         const string to = "ugyldig@example.com";
@@ -115,8 +118,8 @@ public class PendingEmailServiceTests
         // Skal publisere InvalidEmailDetectedEvent til Auth API
         await _publishEndpoint.Received(1)
             .Publish(Arg.Is<InvalidEmailDetectedEvent>(e =>
-                e.Email == to &&
-                e.Reason == errorMessage),
+                    e.Email == to &&
+                    e.Reason == errorMessage),
                 Arg.Any<CancellationToken>());
 
         // Skal IKKE lagre i MongoDB
@@ -144,17 +147,18 @@ public class PendingEmailServiceTests
         // Assert 1: Prøvd 5 ganger mot mottaker + 1 gang mot admin = totalt 6 SendEmailAsync-kall
         await _failedNotificationRepository.Received(1)
             .AddAsync(Arg.Is<FailedNotification>(n =>
-                n.RecipientEmail == to &&
-                n.Subject == subject &&
-                n.HtmlBody == body &&
-                n.EventType == eventType &&
-                n.RetryCount == 5 &&
-                n.LastErrorMessage == errorMessage),
+                    n.RecipientEmail == to &&
+                    n.Subject == subject &&
+                    n.HtmlBody == body &&
+                    n.EventType == eventType &&
+                    n.RetryCount == 5 &&
+                    n.LastErrorMessage == errorMessage),
                 Arg.Any<CancellationToken>());
 
         // Assert 2: Admin skal ha fått overført kritisk e-postvarsel
         await _emailDeliveryService.Received(1)
-            .SendEmailAsync("admin@kjokkenhylla.no", Arg.Is<string>(s => s.Contains("[KRITISK]")), Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>());
+            .SendEmailAsync("admin@kjokkenhylla.no", Arg.Is<string>(s => s.Contains("[KRITISK]")), Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>());
 
         // Assert 3: Tilstandsstore skal merkes med pending = true og notified = true
         _stateStore.HasPendingNotifications.ShouldBeTrue();
@@ -186,6 +190,7 @@ public class PendingEmailServiceTests
 
         // Admin e-post ("admin@kjokkenhylla.no") skal IKKE ha blitt kalt på nytt
         await _emailDeliveryService.DidNotReceive()
-            .SendEmailAsync("admin@kjokkenhylla.no", Arg.Any<string>(), Arg.Any<string>(), cancellationToken: Arg.Any<CancellationToken>());
+            .SendEmailAsync("admin@kjokkenhylla.no", Arg.Any<string>(), Arg.Any<string>(),
+                cancellationToken: Arg.Any<CancellationToken>());
     }
 }
