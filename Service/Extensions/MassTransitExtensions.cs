@@ -27,6 +27,8 @@ public static class MassTransitExtensions
             x.AddConsumer<AccountDeletedBySystemConsumer>();
             x.AddConsumer<Confirmation7DaysReminderConsumer>();
             x.AddConsumer<Confirmation14DaysReminderConsumer>();
+            x.AddConsumer<Inactivity6MonthsWarningConsumer>();
+            x.AddConsumer<Inactivity1YearLockedConsumer>();
 
             // Admin Actions
             x.AddConsumer<AdminCustomEmailRequestedConsumer>();
