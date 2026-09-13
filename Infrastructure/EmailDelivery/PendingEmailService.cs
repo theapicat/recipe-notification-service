@@ -1,9 +1,13 @@
+using System.Net;
 using Contracts.Events;
+using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Exceptions;
 using Infrastructure.State.Interfaces;
+using Infrastructure.TemplateService.Interfaces;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Persistence.Entities;
 using Persistence.Repositories.Interfaces;
 
@@ -14,9 +18,12 @@ public class PendingEmailService(
     IFailedNotificationRepository failedNotificationRepository,
     INotificationStateStore stateStore,
     IPublishEndpoint publishEndpoint,
+    ITemplateRenderService templateRenderService,
+    IOptions<SmtpSettings> smtpSettings,
     ILogger<PendingEmailService> logger) : IPendingEmailService
 {
     private const int MaxAttempts = 5;
+    private readonly SmtpSettings _smtpSettings = smtpSettings.Value;
 
     public async Task ProcessEmailWithRetryAsync(
         string to,
@@ -103,14 +110,17 @@ public class PendingEmailService(
 
             try
             {
-                const string adminEmail = "admin@kjokkenhylla.no";
-                var adminBody = $"<h3>Systemvarsel: Feil ved e-postutsendelse</h3>" +
-                                $"<p>Det har oppstått ubehandlede e-postfeil i systemet som krever ettersyn.</p>" +
-                                $"<p><b>Mottaker:</b> {recipient}</p>" +
-                                $"<p><b>Emne:</b> {subject}</p>" +
-                                $"<p><b>Siste feil:</b> {errorMessage}</p>";
+                var templateModel = new
+                {
+                    recipient = WebUtility.HtmlEncode(recipient),
+                    subject = WebUtility.HtmlEncode(subject),
+                    error_message = WebUtility.HtmlEncode(errorMessage)
+                };
 
-                await emailDeliveryService.SendEmailAsync(adminEmail,
+                var adminBody =
+                    await templateRenderService.RenderTemplateAsync("AdminActions/PendingEmailAlert", templateModel);
+
+                await emailDeliveryService.SendEmailAsync(_smtpSettings.AdminNotificationEmail,
                     "[KRITISK] E-postutsendelse feilet i Kjøkkenhylla", adminBody,
                     cancellationToken: cancellationToken);
             }

@@ -1,10 +1,13 @@
 using Contracts.Events;
 using Infrastructure.EmailDelivery;
+using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Exceptions;
 using Infrastructure.State;
+using Infrastructure.TemplateService.Interfaces;
 using MassTransit;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Persistence.Entities;
@@ -15,6 +18,8 @@ namespace Tests.Infrastructure;
 
 public class PendingEmailServiceTests
 {
+    private const string AdminEmail = "admin@kjokkenhylla.no";
+
     private readonly IEmailDeliveryService _emailDeliveryService = Substitute.For<IEmailDeliveryService>();
 
     private readonly IFailedNotificationRepository _failedNotificationRepository =
@@ -22,17 +27,27 @@ public class PendingEmailServiceTests
 
     private readonly ILogger<PendingEmailService> _logger = Substitute.For<ILogger<PendingEmailService>>();
     private readonly IPublishEndpoint _publishEndpoint = Substitute.For<IPublishEndpoint>();
+    private readonly ITemplateRenderService _templateRenderService = Substitute.For<ITemplateRenderService>();
+
+    private readonly IOptions<SmtpSettings> _smtpSettings =
+        Options.Create(new SmtpSettings { AdminNotificationEmail = AdminEmail });
 
     private readonly PendingEmailService _service;
     private readonly NotificationStateStore _stateStore = new();
 
     public PendingEmailServiceTests()
     {
+        _templateRenderService
+            .RenderTemplateAsync("AdminActions/PendingEmailAlert", Arg.Any<object>())
+            .Returns(Task.FromResult("<html>Admin varsel</html>"));
+
         _service = new PendingEmailService(
             _emailDeliveryService,
             _failedNotificationRepository,
             _stateStore,
             _publishEndpoint,
+            _templateRenderService,
+            _smtpSettings,
             _logger);
     }
 
@@ -155,14 +170,42 @@ public class PendingEmailServiceTests
                     n.LastErrorMessage == errorMessage),
                 Arg.Any<CancellationToken>());
 
-        // Assert 2: Admin skal ha fått overført kritisk e-postvarsel
+        // Assert 2: Admin skal ha fått overført kritisk e-postvarsel til konfigurert admin-adresse
         await _emailDeliveryService.Received(1)
-            .SendEmailAsync("admin@kjokkenhylla.no", Arg.Is<string>(s => s.Contains("[KRITISK]")), Arg.Any<string>(),
+            .SendEmailAsync(AdminEmail, Arg.Is<string>(s => s.Contains("[KRITISK]")), Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>());
+
+        // Assert 2b: Admin-varselet skal rendres via Scriban-malen, ikke bygges som rå streng
+        await _templateRenderService.Received(1)
+            .RenderTemplateAsync("AdminActions/PendingEmailAlert", Arg.Any<object>());
 
         // Assert 3: Tilstandsstore skal merkes med pending = true og notified = true
         _stateStore.HasPendingNotifications.ShouldBeTrue();
         _stateStore.HasNotifiedAdmin.ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task ProcessEmailWithRetryAsync_WhenAll5AttemptsFail_ShouldHtmlEncodeUntrustedFieldsInAdminAlert()
+    {
+        // Arrange
+        const string to = "feilet@example.com";
+        const string subject = "<script>alert(1)</script>";
+        const string body = "<html>Test</html>";
+        const string eventType = "TestEvent";
+        const string errorMessage = "SMTP feil: <img src=x onerror=alert(1)>";
+
+        _emailDeliveryService
+            .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new EmailDeliveryException(errorMessage));
+
+        // Act
+        await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType, CancellationToken.None);
+
+        // Assert: mottaker/emne/feilmelding skal HTML-encodes før de sendes til malmotoren
+        await _templateRenderService.Received(1)
+            .RenderTemplateAsync("AdminActions/PendingEmailAlert", Arg.Is<object>(model =>
+                !model.ToString()!.Contains("<script>") &&
+                !model.ToString()!.Contains("<img")));
     }
 
     [Fact]
@@ -188,9 +231,9 @@ public class PendingEmailServiceTests
         await _failedNotificationRepository.Received(1)
             .AddAsync(Arg.Any<FailedNotification>(), Arg.Any<CancellationToken>());
 
-        // Admin e-post ("admin@kjokkenhylla.no") skal IKKE ha blitt kalt på nytt
+        // Admin e-post skal IKKE ha blitt kalt på nytt
         await _emailDeliveryService.DidNotReceive()
-            .SendEmailAsync("admin@kjokkenhylla.no", Arg.Any<string>(), Arg.Any<string>(),
+            .SendEmailAsync(AdminEmail, Arg.Any<string>(), Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>());
     }
 }

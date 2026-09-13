@@ -33,26 +33,6 @@ public class FailedNotificationRepository : IFailedNotificationRepository
         await _collection.DeleteManyAsync(filter, cancellationToken);
     }
 
-    public async Task UpdateFailedAttemptAsync(Guid id, string errorMessage,
-        CancellationToken cancellationToken = default)
-    {
-        var update = Builders<FailedNotification>.Update
-            .Inc(x => x.RetryCount, 1)
-            .Set(x => x.LastErrorMessage, errorMessage)
-            .Set(x => x.LastAttemptAt, DateTime.UtcNow);
-
-        await _collection.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
-    }
-
-    public async Task ResetRetryCountAsync(Guid id, CancellationToken cancellationToken = default)
-    {
-        var update = Builders<FailedNotification>.Update
-            .Set(x => x.RetryCount, 0)
-            .Set(x => x.LastErrorMessage, "Manuelt tilbakestilt av admin");
-
-        await _collection.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
-    }
-
     public async Task ResetRetryCountManyAsync(IEnumerable<Guid> ids, CancellationToken cancellationToken = default)
     {
         var filter = Builders<FailedNotification>.Filter.In(x => x.Id, ids);
@@ -61,20 +41,6 @@ public class FailedNotificationRepository : IFailedNotificationRepository
             .Set(x => x.LastErrorMessage, "Manuelt tilbakestilt av admin");
 
         await _collection.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
-    }
-
-    public async Task<List<FailedNotification>> GetPendingBatchAsync(
-        int maxRetryCount = 5,
-        int batchSize = 50,
-        CancellationToken cancellationToken = default)
-    {
-        // Henter KUN elementer hvor RetryCount er lavere enn grenseverdien
-        var filter = Builders<FailedNotification>.Filter.Lt(x => x.RetryCount, maxRetryCount);
-
-        return await _collection.Find(filter)
-            .SortBy(x => x.CreatedAt)
-            .Limit(batchSize)
-            .ToListAsync(cancellationToken);
     }
 
     public async Task<long> GetPendingCountAsync(CancellationToken cancellationToken = default)

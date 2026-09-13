@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+    <meta charset="utf-8">
+    <meta content="width=device-width, initial-scale=1.0" name="viewport">
+    <title>Systemvarsel: E-postutsendelse feilet</title>
+</head>
+<body style="margin: 0; padding: 0; background-color: #f7f6f2; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; color: #222920;">
+
+<!-- Ytre container -->
+<table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background-color: #f7f6f2; padding: 40px 10px;"
+       width="100%">
+    <tr>
+        <td align="center">
+
+            <!-- Hovedkort -->
+            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="max-width: 560px; background-color: #ffffff; border: 1px solid #e2e5df; border-radius: 12px; overflow: hidden; border-collapse: separate;"
+                   width="100%">
+
+                <!-- Header Banner -->
+                <tr>
+                    <td style="background-color: #2a3e30; padding: 24px; text-align: center;">
+                        <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation">
+                            <tr>
+                                <!-- Kokkelue Logo (Inline SVG) -->
+                                <td style="padding-right: 10px; vertical-align: middle;">
+                                    <svg fill="none" height="28" viewBox="0 0 32 32" width="28"
+                                         xmlns="http://www.w3.org/2000/svg">
+                                        <rect fill="#5E8C71" height="32" rx="8" width="32"/>
+                                        <path d="M11 19.5C8.8 19.5 7.8 15.5 10 13.8C9.8 11 13.8 9.8 16 11.2C18.2 9.8 22.2 11 22 13.8C24.2 15.5 23.2 19.5 21 19.5H11Z"
+                                              fill="white"/>
+                                        <rect fill="white" height="3" rx="1" width="10" x="11" y="20.5"/>
+                                    </svg>
+                                </td>
+                                <td style="vertical-align: middle;">
+                                    <span style="color: #ffffff; font-size: 20px; font-weight: 700; letter-spacing: -0.3px;">Kjøkkenhylla</span>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+
+                <!-- Innholdsområde -->
+                <tr>
+                    <td style="padding: 32px 28px; color: #222920;">
+
+                        <h1 style="margin: 0 0 20px 0; font-size: 22px; font-weight: 700; color: #222920; line-height: 1.3;">
+                            Systemvarsel: E-postutsendelse feilet
+                        </h1>
+
+                        <p style="margin: 0 0 20px 0; font-size: 15px; line-height: 1.6; color: #222920;">
+                            Det har oppstått ubehandlede e-postfeil i systemet som krever ettersyn. Meldingen(e) er
+                            lagret i den transiente feilbufferen og kan håndteres fra admin-panelet.
+                        </p>
+
+                        <!-- Infoboks med Terrakotta-aksent -->
+                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="margin: 24px 0;"
+                               width="100%">
+                            <tr>
+                                <td style="background-color: #f9ebe6; border-left: 4px solid #c86a4b; padding: 14px 16px; border-radius: 4px; color: #4e2114; font-size: 14px; line-height: 1.5;">
+                                    <p style="margin: 0 0 6px 0;"><strong style="color: #a34e34;">Mottaker:</strong> {{ recipient }}</p>
+                                    <p style="margin: 0 0 6px 0;"><strong style="color: #a34e34;">Emne:</strong> {{ subject }}</p>
+                                    <p style="margin: 0;"><strong style="color: #a34e34;">Siste feil:</strong> {{ error_message }}</p>
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p style="margin: 20px 0 0 0; font-size: 14px; line-height: 1.5; color: #596356;">
+                            Dette varselet sendes kun én gang per feilperiode og gjentas ikke før feilbufferen er
+                            tømt.
+                        </p>
+
+                    </td>
+                </tr>
+
+                <!-- Skillelinje -->
+                <tr>
+                    <td style="padding: 0 28px;">
+                        <hr style="border: none; border-top: 1px solid #e2e5df; margin: 0;">
+                    </td>
+                </tr>
+
+                <!-- Footer -->
+                <tr>
+                    <td style="padding: 24px 28px; text-align: center; color: #596356; font-size: 13px; line-height: 1.5;">
+                        <p style="margin: 0;">
+                            Automatisk systemvarsel fra recipe-notification-service.
+                        </p>
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+    </tr>
+</table>
+
+</body>
+</html>
