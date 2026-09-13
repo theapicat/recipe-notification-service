@@ -1,6 +1,7 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Extensions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ namespace Infrastructure.Processors.UserActions;
 public class AccountDeletedByUserProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
-    ILogger<AccountDeletedByUserProcessor> logger) : IAccountDeletedByUserProcessor
+    ILogger<AccountDeletedByUserProcessor> logger) : IEventProcessor<UserAccountDeletedByUserEvent>
 {
     public async Task ProcessAsync(UserAccountDeletedByUserEvent eventData,
         CancellationToken cancellationToken = default)
@@ -19,7 +20,7 @@ public class AccountDeletedByUserProcessor(
         var templateModel = new
         {
             name = eventData.Name,
-            deleted_at = eventData.DeletedAt.ToString("dd.MM.yyyy HH:mm")
+            deleted_at = eventData.DeletedAt.ToNorwegianDisplayFormat()
         };
 
         var htmlBody =

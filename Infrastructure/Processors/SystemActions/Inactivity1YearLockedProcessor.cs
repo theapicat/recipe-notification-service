@@ -1,7 +1,7 @@
 using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Options;
-using Infrastructure.Processors.Interfaces.SystemActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,7 +12,7 @@ public class Inactivity1YearLockedProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
-    ILogger<Inactivity1YearLockedProcessor> logger) : IInactivity1YearLockedProcessor
+    ILogger<Inactivity1YearLockedProcessor> logger) : IEventProcessor<Inactivity1YearLockedEvent>
 {
     public async Task ProcessAsync(Inactivity1YearLockedEvent eventData, CancellationToken cancellationToken = default)
     {

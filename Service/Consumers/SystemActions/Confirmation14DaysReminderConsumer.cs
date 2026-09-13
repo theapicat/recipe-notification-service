@@ -1,11 +1,11 @@
 using Contracts.Events.SystemActions;
-using Infrastructure.Processors.Interfaces.SystemActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.SystemActions;
 
 public class Confirmation14DaysReminderConsumer(
-    IConfirmation14DaysReminderProcessor processor,
+    IEventProcessor<Confirmation14DaysReminderEvent> processor,
     ILogger<Confirmation14DaysReminderConsumer> logger) : IConsumer<Confirmation14DaysReminderEvent>
 {
     public async Task Consume(ConsumeContext<Confirmation14DaysReminderEvent> context)

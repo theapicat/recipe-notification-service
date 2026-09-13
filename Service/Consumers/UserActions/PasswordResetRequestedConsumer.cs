@@ -1,11 +1,11 @@
 using Contracts.Events.UserActions;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.UserActions;
 
 public class PasswordResetRequestedConsumer(
-    IPasswordResetRequestedProcessor processor,
+    IEventProcessor<PasswordResetRequestedEvent> processor,
     ILogger<PasswordResetRequestedConsumer> logger) : IConsumer<PasswordResetRequestedEvent>
 {
     public async Task Consume(ConsumeContext<PasswordResetRequestedEvent> context)

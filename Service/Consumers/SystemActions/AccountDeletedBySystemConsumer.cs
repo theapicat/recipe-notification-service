@@ -1,11 +1,11 @@
 using Contracts.Events.SystemActions;
-using Infrastructure.Processors.Interfaces.SystemActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.SystemActions;
 
 public class AccountDeletedBySystemConsumer(
-    IAccountDeletedBySystemProcessor processor,
+    IEventProcessor<UserAccountDeletedBySystemEvent> processor,
     ILogger<AccountDeletedBySystemConsumer> logger) : IConsumer<UserAccountDeletedBySystemEvent>
 {
     public async Task Consume(ConsumeContext<UserAccountDeletedBySystemEvent> context)

@@ -1,11 +1,11 @@
 using Contracts.Events.AdminActions;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.AdminActions;
 
 public class UserUnlockedByAdminConsumer(
-    IUserUnlockedByAdminProcessor processor,
+    IEventProcessor<UserUnlockedByAdminEvent> processor,
     ILogger<UserUnlockedByAdminConsumer> logger) : IConsumer<UserUnlockedByAdminEvent>
 {
     public async Task Consume(ConsumeContext<UserUnlockedByAdminEvent> context)

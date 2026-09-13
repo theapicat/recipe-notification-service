@@ -1,7 +1,7 @@
 using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Options;
-using Infrastructure.Processors.Interfaces.SystemActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,7 +12,7 @@ public class Inactivity6MonthsWarningProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
-    ILogger<Inactivity6MonthsWarningProcessor> logger) : IInactivity6MonthsWarningProcessor
+    ILogger<Inactivity6MonthsWarningProcessor> logger) : IEventProcessor<Inactivity6MonthsWarningEvent>
 {
     public async Task ProcessAsync(Inactivity6MonthsWarningEvent eventData,
         CancellationToken cancellationToken = default)

@@ -1,7 +1,7 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Options;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,20 +12,18 @@ public class ResendEmailConfirmationProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
-    ILogger<ResendEmailConfirmationProcessor> logger) : IResendEmailConfirmationProcessor
+    ILogger<ResendEmailConfirmationProcessor> logger) : IEventProcessor<ResendEmailConfirmationRequestedEvent>
 {
     public async Task ProcessAsync(ResendEmailConfirmationRequestedEvent eventData,
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Behandler ny bekreftelses-epost for bruker {Email}", eventData.Email);
 
-        var termsLink = $"{appSettings.Value.FrontendUrl.TrimEnd('/')}/legal/terms";
-
         var templateModel = new
         {
             name = eventData.Name,
             confirmation_link = eventData.ConfirmationLink,
-            terms_link = termsLink
+            terms_link = appSettings.Value.GetTermsLink()
         };
 
         var htmlBody =

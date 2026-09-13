@@ -1,7 +1,8 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Extensions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,7 +13,7 @@ public class ContactFormProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<SmtpSettings> smtpSettings,
-    ILogger<ContactFormProcessor> logger) : IContactFormProcessor
+    ILogger<ContactFormProcessor> logger) : IEventProcessor<ContactFormSubmittedEvent>
 {
     private readonly SmtpSettings _settings = smtpSettings.Value;
 
@@ -26,7 +27,7 @@ public class ContactFormProcessor(
             email = eventData.Email,
             subject = eventData.Subject,
             message = eventData.Message,
-            submitted_at = eventData.SubmittedAt.ToString("dd.MM.yyyy HH:mm")
+            submitted_at = eventData.SubmittedAt.ToNorwegianDisplayFormat()
         };
 
         // 1. Send e-post til Administrator / Support

@@ -1,11 +1,11 @@
 using Contracts.Events.AdminActions;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.AdminActions;
 
 public class EmailManuallyConfirmedByAdminConsumer(
-    IEmailManuallyConfirmedByAdminProcessor processor,
+    IEventProcessor<EmailManuallyConfirmedByAdminEvent> processor,
     ILogger<EmailManuallyConfirmedByAdminConsumer> logger) : IConsumer<EmailManuallyConfirmedByAdminEvent>
 {
     public async Task Consume(ConsumeContext<EmailManuallyConfirmedByAdminEvent> context)

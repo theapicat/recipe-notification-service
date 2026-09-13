@@ -1,5 +1,5 @@
 using Contracts.Events.AdminActions;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 using MassTransit.Testing;
 using Microsoft.Extensions.DependencyInjection;
@@ -15,8 +15,8 @@ public class AdminCustomEmailRequestedConsumerTests
     private readonly ILogger<AdminCustomEmailRequestedConsumer> _logger =
         Substitute.For<ILogger<AdminCustomEmailRequestedConsumer>>();
 
-    private readonly IAdminCustomEmailRequestedProcessor _processor =
-        Substitute.For<IAdminCustomEmailRequestedProcessor>();
+    private readonly IEventProcessor<AdminCustomEmailRequestedEvent> _processor =
+        Substitute.For<IEventProcessor<AdminCustomEmailRequestedEvent>>();
 
     [Fact]
     public async Task Consume_WhenEventReceived_ShouldInvokeProcessor()

@@ -1,11 +1,11 @@
 using Contracts.Events.UserActions;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.UserActions;
 
 public class UserRegisteredConsumer(
-    IUserRegisteredProcessor processor,
+    IEventProcessor<UserRegisteredEvent> processor,
     ILogger<UserRegisteredConsumer> logger) : IConsumer<UserRegisteredEvent>
 {
     public async Task Consume(ConsumeContext<UserRegisteredEvent> context)

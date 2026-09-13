@@ -1,6 +1,6 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +9,7 @@ namespace Infrastructure.Processors.AdminActions;
 public class UserAccountDeletedByAdminProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
-    ILogger<UserAccountDeletedByAdminProcessor> logger) : IUserAccountDeletedByAdminProcessor
+    ILogger<UserAccountDeletedByAdminProcessor> logger) : IEventProcessor<UserAccountDeletedByAdminEvent>
 {
     public async Task ProcessAsync(UserAccountDeletedByAdminEvent eventData,
         CancellationToken cancellationToken = default)

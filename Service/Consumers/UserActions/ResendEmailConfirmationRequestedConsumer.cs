@@ -1,11 +1,11 @@
 using Contracts.Events.UserActions;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.UserActions;
 
 public class ResendEmailConfirmationRequestedConsumer(
-    IResendEmailConfirmationProcessor processor) : IConsumer<ResendEmailConfirmationRequestedEvent>
+    IEventProcessor<ResendEmailConfirmationRequestedEvent> processor) : IConsumer<ResendEmailConfirmationRequestedEvent>
 {
     public async Task Consume(ConsumeContext<ResendEmailConfirmationRequestedEvent> context)
     {

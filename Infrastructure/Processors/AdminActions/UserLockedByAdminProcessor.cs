@@ -1,6 +1,7 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Extensions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +10,7 @@ namespace Infrastructure.Processors.AdminActions;
 public class UserLockedByAdminProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
-    ILogger<UserLockedByAdminProcessor> logger) : IUserLockedByAdminProcessor
+    ILogger<UserLockedByAdminProcessor> logger) : IEventProcessor<UserLockedByAdminEvent>
 {
     public async Task ProcessAsync(UserLockedByAdminEvent eventData, CancellationToken cancellationToken = default)
     {
@@ -19,7 +20,7 @@ public class UserLockedByAdminProcessor(
         {
             name = eventData.Name,
             reason_details = eventData.ReasonDetails,
-            locked_at = eventData.LockedAt.ToString("dd.MM.yyyy HH:mm")
+            locked_at = eventData.LockedAt.ToNorwegianDisplayFormat()
         };
 
         var htmlBody = await templateRenderService.RenderTemplateAsync("AdminActions/UserLockedByAdmin", templateModel);

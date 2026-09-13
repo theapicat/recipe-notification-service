@@ -1,11 +1,11 @@
 using Contracts.Events.AdminActions;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.AdminActions;
 
 public class UserAccountDeletedByAdminConsumer(
-    IUserAccountDeletedByAdminProcessor processor,
+    IEventProcessor<UserAccountDeletedByAdminEvent> processor,
     ILogger<UserAccountDeletedByAdminConsumer> logger) : IConsumer<UserAccountDeletedByAdminEvent>
 {
     public async Task Consume(ConsumeContext<UserAccountDeletedByAdminEvent> context)

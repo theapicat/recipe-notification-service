@@ -1,10 +1,10 @@
 using Contracts.Events.SystemActions;
-using Infrastructure.Processors.Interfaces.SystemActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.SystemActions;
 
-public class Inactivity6MonthsWarningConsumer(IInactivity6MonthsWarningProcessor processor)
+public class Inactivity6MonthsWarningConsumer(IEventProcessor<Inactivity6MonthsWarningEvent> processor)
     : IConsumer<Inactivity6MonthsWarningEvent>
 {
     public async Task Consume(ConsumeContext<Inactivity6MonthsWarningEvent> context)

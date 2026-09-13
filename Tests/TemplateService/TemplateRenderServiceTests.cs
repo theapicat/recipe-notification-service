@@ -49,6 +49,7 @@ public class TemplateRenderServiceTests
     // Admin Actions
     [InlineData("AdminActions/AdminCustomEmail")]
     [InlineData("AdminActions/EmailManuallyConfirmedByAdmin")]
+    [InlineData("AdminActions/PendingEmailAlert")]
     [InlineData("AdminActions/UserAccountDeletedByAdmin")]
     [InlineData("AdminActions/UserDeletedAndBlacklistedByAdmin")]
     [InlineData("AdminActions/UserLockedByAdmin")]
@@ -80,7 +81,9 @@ public class TemplateRenderServiceTests
             submitted_at = "10.10.2026 12:00",
             deleted_at = "10.10.2026 12:00",
             device_info = "Chrome / Windows",
-            ip_address = "127.0.0.1"
+            ip_address = "127.0.0.1",
+            recipient = "mottaker@example.com",
+            error_message = "SMTP timeout"
         };
 
         // Act
@@ -110,5 +113,46 @@ public class TemplateRenderServiceTests
         // Assert
         html.ShouldContain("UnikTestBruker");
         html.ShouldContain("https://kjokkenhylla.no/confirm?token=unik_token_999");
+    }
+
+    [Fact]
+    public async Task RenderTemplateAsync_ShouldIncludeSharedLayoutWithTitleAndDefaultFooter()
+    {
+        // Arrange
+        const string templateName = "UserActions/UserRegisteredWelcome";
+        var model = new
+        {
+            name = "Test",
+            confirmation_link = "https://kjokkenhylla.no/confirm",
+            terms_link = "https://kjokkenhylla.no/legal/terms"
+        };
+
+        // Act
+        var html = await _service.RenderTemplateAsync(templateName, model);
+
+        // Assert: _Layout.html er inkludert med riktig <title> og standard-footer
+        html.ShouldContain("<title>Velkommen til Kjøkkenhylla!</title>");
+        html.ShouldContain("Med vennlig hilsen,");
+        html.ShouldContain("Kjøkkenhylla-teamet");
+    }
+
+    [Fact]
+    public async Task RenderTemplateAsync_ShouldUseCustomFooterNoteWhenTemplateOverridesIt()
+    {
+        // Arrange
+        const string templateName = "AdminActions/PendingEmailAlert";
+        var model = new
+        {
+            recipient = "mottaker@example.com",
+            subject = "Test emne",
+            error_message = "SMTP timeout"
+        };
+
+        // Act
+        var html = await _service.RenderTemplateAsync(templateName, model);
+
+        // Assert: denne malen setter footer_note, som skal overstyre standard-footeren i layouten
+        html.ShouldContain("Automatisk systemvarsel fra recipe-notification-service.");
+        html.ShouldNotContain("Med vennlig hilsen,");
     }
 }

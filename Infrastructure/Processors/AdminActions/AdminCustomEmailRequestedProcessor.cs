@@ -1,6 +1,6 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +9,7 @@ namespace Infrastructure.Processors.AdminActions;
 public class AdminCustomEmailRequestedProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
-    ILogger<AdminCustomEmailRequestedProcessor> logger) : IAdminCustomEmailRequestedProcessor
+    ILogger<AdminCustomEmailRequestedProcessor> logger) : IEventProcessor<AdminCustomEmailRequestedEvent>
 {
     public async Task ProcessAsync(AdminCustomEmailRequestedEvent eventData,
         CancellationToken cancellationToken = default)

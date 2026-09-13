@@ -1,6 +1,6 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +9,7 @@ namespace Infrastructure.Processors.AdminActions;
 public class UserDeletedAndBlacklistedByAdminProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
-    ILogger<UserDeletedAndBlacklistedByAdminProcessor> logger) : IUserDeletedAndBlacklistedByAdminProcessor
+    ILogger<UserDeletedAndBlacklistedByAdminProcessor> logger) : IEventProcessor<UserDeletedAndBlacklistedByAdminEvent>
 {
     public async Task ProcessAsync(UserDeletedAndBlacklistedByAdminEvent eventData,
         CancellationToken cancellationToken = default)

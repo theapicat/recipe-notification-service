@@ -1,11 +1,11 @@
 using Contracts.Events.UserActions;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.UserActions;
 
 public class PasswordChangedConsumer(
-    IPasswordChangedProcessor processor,
+    IEventProcessor<PasswordChangedEvent> processor,
     ILogger<PasswordChangedConsumer> logger) : IConsumer<PasswordChangedEvent>
 {
     public async Task Consume(ConsumeContext<PasswordChangedEvent> context)

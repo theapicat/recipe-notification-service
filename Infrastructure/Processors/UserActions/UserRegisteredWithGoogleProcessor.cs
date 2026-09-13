@@ -1,7 +1,7 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Options;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,21 +12,18 @@ public class UserRegisteredWithGoogleProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
-    ILogger<UserRegisteredWithGoogleProcessor> logger) : IUserRegisteredWithGoogleProcessor
+    ILogger<UserRegisteredWithGoogleProcessor> logger) : IEventProcessor<UserRegisteredWithGoogleEvent>
 {
     public async Task ProcessAsync(UserRegisteredWithGoogleEvent eventData,
         CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Behandler Google-velkomst-epost for ny bruker {Email}", eventData.Email);
 
-        var frontendUrl = appSettings.Value.FrontendUrl.TrimEnd('/');
-        var termsLink = $"{frontendUrl}/legal/terms";
-
         var templateModel = new
         {
             name = eventData.Name,
-            frontend_url = frontendUrl,
-            terms_link = termsLink
+            frontend_url = appSettings.Value.FrontendUrl.TrimEnd('/'),
+            terms_link = appSettings.Value.GetTermsLink()
         };
 
         var htmlBody = await templateRenderService.RenderTemplateAsync(

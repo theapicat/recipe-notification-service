@@ -1,6 +1,6 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Interfaces;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 
@@ -9,7 +9,7 @@ namespace Infrastructure.Processors.UserActions;
 public class PasswordResetRequestedProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
-    ILogger<PasswordResetRequestedProcessor> logger) : IPasswordResetRequestedProcessor
+    ILogger<PasswordResetRequestedProcessor> logger) : IEventProcessor<PasswordResetRequestedEvent>
 {
     public async Task ProcessAsync(PasswordResetRequestedEvent eventData, CancellationToken cancellationToken = default)
     {

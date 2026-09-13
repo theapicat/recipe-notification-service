@@ -2,12 +2,15 @@ using Infrastructure.Exceptions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Scriban;
+using Scriban.Runtime;
 
 namespace Infrastructure.TemplateService;
 
 public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITemplateRenderService
 {
     private readonly string _templatesFolder = Path.Combine(AppContext.BaseDirectory, "TemplateService", "Templates");
+    private readonly ITemplateLoader _templateLoader =
+        new TemplateFileSystemLoader(Path.Combine(AppContext.BaseDirectory, "TemplateService", "Templates"));
 
     public async Task<string> RenderTemplateAsync<T>(string templateName, T model)
     {
@@ -45,7 +48,17 @@ public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITem
         // 3. Kjøretidsfeil under rendering
         try
         {
-            return await template.RenderAsync(model);
+            var scriptObject = new ScriptObject();
+            scriptObject.Import(model);
+
+            var context = new TemplateContext
+            {
+                TemplateLoader = _templateLoader,
+                MemberRenamer = StandardMemberRenamer.Default
+            };
+            context.PushGlobal(scriptObject);
+
+            return await template.RenderAsync(context);
         }
         catch (Exception ex)
         {

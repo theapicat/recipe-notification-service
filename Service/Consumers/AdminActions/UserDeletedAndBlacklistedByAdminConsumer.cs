@@ -1,11 +1,11 @@
 using Contracts.Events.AdminActions;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.AdminActions;
 
 public class UserDeletedAndBlacklistedByAdminConsumer(
-    IUserDeletedAndBlacklistedByAdminProcessor processor) : IConsumer<UserDeletedAndBlacklistedByAdminEvent>
+    IEventProcessor<UserDeletedAndBlacklistedByAdminEvent> processor) : IConsumer<UserDeletedAndBlacklistedByAdminEvent>
 {
     public async Task Consume(ConsumeContext<UserDeletedAndBlacklistedByAdminEvent> context)
     {

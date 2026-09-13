@@ -1,7 +1,7 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Options;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,7 +12,7 @@ public class EmailManuallyConfirmedByAdminProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
-    ILogger<EmailManuallyConfirmedByAdminProcessor> logger) : IEmailManuallyConfirmedByAdminProcessor
+    ILogger<EmailManuallyConfirmedByAdminProcessor> logger) : IEventProcessor<EmailManuallyConfirmedByAdminEvent>
 {
     public async Task ProcessAsync(EmailManuallyConfirmedByAdminEvent eventData,
         CancellationToken cancellationToken = default)

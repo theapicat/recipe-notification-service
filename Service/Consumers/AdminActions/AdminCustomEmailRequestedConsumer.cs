@@ -1,11 +1,11 @@
 using Contracts.Events.AdminActions;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.AdminActions;
 
 public class AdminCustomEmailRequestedConsumer(
-    IAdminCustomEmailRequestedProcessor processor,
+    IEventProcessor<AdminCustomEmailRequestedEvent> processor,
     ILogger<AdminCustomEmailRequestedConsumer> logger) : IConsumer<AdminCustomEmailRequestedEvent>
 {
     public async Task Consume(ConsumeContext<AdminCustomEmailRequestedEvent> context)

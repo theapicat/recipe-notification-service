@@ -1,7 +1,8 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Extensions;
 using Infrastructure.Options;
-using Infrastructure.Processors.Interfaces.AdminActions;
+using Infrastructure.Processors.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -12,7 +13,7 @@ public class UserUnlockedByAdminProcessor(
     ITemplateRenderService templateRenderService,
     IPendingEmailService pendingEmailService,
     IOptions<AppSettings> appSettings,
-    ILogger<UserUnlockedByAdminProcessor> logger) : IUserUnlockedByAdminProcessor
+    ILogger<UserUnlockedByAdminProcessor> logger) : IEventProcessor<UserUnlockedByAdminEvent>
 {
     public async Task ProcessAsync(UserUnlockedByAdminEvent eventData, CancellationToken cancellationToken = default)
     {
@@ -23,7 +24,7 @@ public class UserUnlockedByAdminProcessor(
         var templateModel = new
         {
             name = eventData.Name,
-            unlocked_at = eventData.UnlockedAt.ToString("dd.MM.yyyy HH:mm"),
+            unlocked_at = eventData.UnlockedAt.ToNorwegianDisplayFormat(),
             login_link = loginLink
         };
 

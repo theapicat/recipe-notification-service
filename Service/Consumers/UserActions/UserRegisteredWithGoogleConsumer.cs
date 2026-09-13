@@ -1,11 +1,11 @@
 using Contracts.Events.UserActions;
-using Infrastructure.Processors.Interfaces.UserActions;
+using Infrastructure.Processors.Interfaces;
 using MassTransit;
 
 namespace Service.Consumers.UserActions;
 
 public class UserRegisteredWithGoogleConsumer(
-    IUserRegisteredWithGoogleProcessor processor,
+    IEventProcessor<UserRegisteredWithGoogleEvent> processor,
     ILogger<UserRegisteredWithGoogleConsumer> logger) : IConsumer<UserRegisteredWithGoogleEvent>
 {
     public async Task Consume(ConsumeContext<UserRegisteredWithGoogleEvent> context)
