@@ -1,9 +1,8 @@
 # 🧪 Teststrategi
 
-> Dette dokumentet beskriver dagens teststrategi og verktøykasse. En dypere gjennomgang av selve
-> testdekningen (er alt som beskrives her faktisk dekket, og godt dekket?) er planlagt som eget
-> arbeid etter denne dokumentasjonsrevisjonen - betrakt innholdet under som "hva strategien er ment å
-> være", ikke en verifisert coverage-rapport.
+> Dette dokumentet er verifisert mot en full gjennomgang av testsuiten (103 tester, alle grønne). De to
+> hullene som tidligere sto beskrevet her - manglende fail-fast-test på de fleste prosessorer, og manglende
+> direkte consumer-tester for de tynne event-consumerne - er nå tettet (se punkt 1 og 4 under).
 
 ## Formål
 
@@ -39,18 +38,19 @@ Tests/
 ├── TemplateService/
 │   └── TemplateRenderServiceTests.cs
 └── Consumers/
-    ├── AdminActions/AdminCustomEmailRequestedConsumerTests.cs
+    ├── AdminActions/     - én testklasse per event-consumer (7 stk)
+    ├── SystemActions/    - én testklasse per event-consumer (5 stk)
+    ├── UserActions/      - én testklasse per event-consumer (7 stk)
     └── NotificationManagement/
         ├── GetFailedNotificationsConsumerTests.cs
         ├── RetryFailedNotificationCommandConsumerTests.cs
         └── DeleteFailedNotificationCommandConsumerTests.cs
 ```
 
-Merk: kun **ett** rent event-consumer-eksempel har egen test i dag
-(`AdminCustomEmailRequestedConsumerTests`) - de resterende event-consumerne under `UserActions` og
-`SystemActions` er så tynne (logg + delegering) at de i dag kun dekkes indirekte via
-processor-testene. Om dette er tilstrekkelig er nettopp noe som hører hjemme i den kommende
-testgjennomgangen.
+Hver av de 19 event-consumerne har nå sin egen `MassTransit.TestHarness`-test som verifiserer at
+`Consume(...)` faktisk kalles og delegerer til riktig `IEventProcessor<TEvent>` med riktig
+`CancellationToken` - dette dekker DI-oppsettet og selve `IConsumer<T>`-implementasjonen, ikke bare
+prosessorlogikken bak den.
 
 ## De fire testpilarene
 
@@ -61,10 +61,10 @@ Isoleres ved å mocke `ITemplateRenderService` og `IPendingEmailService`. Verifi
 * At `RenderTemplateAsync` kalles med **eksakt riktig stibane** (f.eks. `"UserActions/UserRegisteredWelcome"`)
   og korrekt utfylte modell-variabler.
 * At `ProcessEmailWithRetryAsync` kalles med riktig mottaker, emne, HTML-body og `nameof(EventType)`.
-* At `TemplateRenderException` forplanter seg ufanget (fail-fast).
+* At `TemplateRenderException` forplanter seg ufanget (fail-fast) - dekket for **alle 19** prosessorer.
 
 Prosessorene testes som **konkrete klasser**, ikke via `IEventProcessor<TEvent>` - det delte grensesnittet
-brukes ikke til mocking her, kun til DI og til den ene consumer-testen nevnt over.
+brukes ikke til mocking her, kun til DI og til consumer-testene (pilar 4).
 
 ### 2. Infrastruktur og resiliens - enhetstester
 
@@ -95,7 +95,7 @@ brukes ikke til mocking her, kun til DI og til den ene consumer-testen nevnt ove
 Bruk av `MassTransit.TestHarness`:
 
 * At publisering av et event aktiverer riktig consumer, som videresender til riktig prosessor (mocket via
-  `IEventProcessor<TEvent>` der en dedikert test finnes).
+  `IEventProcessor<TEvent>`) med riktig `CancellationToken` - dekket for **alle 19** event-consumers.
 * **Management-consumers:** `GetFailedNotificationsConsumer` svarer med korrekt DTO-liste;
   `RetryFailedNotificationCommandConsumer` nullstiller retry-teller og delegerer retry+sletting til
   `PendingEmailService` (uten selv å slette dokumentet direkte - se
