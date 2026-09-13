@@ -70,14 +70,15 @@ public class RetryFailedNotificationCommandConsumerTests
         await _repository.Received(1)
             .ResetRetryCountManyAsync(Arg.Is<List<Guid>>(x => x.Contains(targetId)), Arg.Any<CancellationToken>());
 
-        // 2. Sender e-post på nytt via PendingEmailService
+        // 2. Sender e-post på nytt via PendingEmailService, med dokumentets id slik at
+        //    PendingEmailService selv styrer sletting (kun ved suksess) fremfor at consumeren sletter blindt
         await _pendingEmailService.Received(1)
             .ProcessEmailWithRetryAsync("retry@example.com", "Emne", "<html>Body</html>", "UserRegisteredEvent",
-                Arg.Any<CancellationToken>());
+                Arg.Any<CancellationToken>(), targetId);
 
-        // 3. Sletter fra MongoDB
-        await _repository.Received(1)
-            .DeleteAsync(targetId, Arg.Any<CancellationToken>());
+        // 3. Consumeren skal IKKE slette dokumentet selv - det er PendingEmailServices ansvar
+        await _repository.DidNotReceiveWithAnyArgs()
+            .DeleteAsync(Arg.Any<Guid>(), Arg.Any<CancellationToken>());
 
         // 4. Tilbakestiller state store siden teller er 0
         _stateStore.Received(1)

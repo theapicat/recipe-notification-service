@@ -25,12 +25,13 @@ public class PendingEmailService(
     private const int MaxAttempts = 5;
     private readonly SmtpSettings _smtpSettings = smtpSettings.Value;
 
-    public async Task ProcessEmailWithRetryAsync(
+    public async Task<bool> ProcessEmailWithRetryAsync(
         string to,
         string subject,
         string htmlBody,
         string eventType,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Guid? existingNotificationId = null)
     {
         var lastErrorMessage = string.Empty;
 
@@ -41,7 +42,11 @@ public class PendingEmailService(
                     MaxAttempts, to);
 
                 await emailDeliveryService.SendEmailAsync(to, subject, htmlBody, cancellationToken: cancellationToken);
-                return; // Vellykket utsending
+
+                if (existingNotificationId.HasValue)
+                    await failedNotificationRepository.DeleteAsync(existingNotificationId.Value, cancellationToken);
+
+                return true; // Vellykket utsending
             }
             catch (EmailDeliveryException ex)
             {
@@ -60,30 +65,42 @@ public class PendingEmailService(
                         DetectedAt = DateTime.UtcNow
                     }, cancellationToken);
 
-                    return;
+                    // Ikke levert - et evt. bufferdokument beholdes uendret til admin rydder opp manuelt
+                    return false;
                 }
 
                 if (attempt < MaxAttempts) await Task.Delay(TimeSpan.FromSeconds(2 * attempt), cancellationToken);
             }
 
-        // Alle 5 in-line forsøk feilet -> Lagre i MongoDB-buffer
+        // Alle 5 in-line forsøk feilet
         logger.LogError("Alle {MaxAttempts} in-line forsøk feilet for e-post til {To}. Lagrer i MongoDB.", MaxAttempts,
             to);
 
-        var failedNotification = new FailedNotification
+        if (existingNotificationId.HasValue)
         {
-            RecipientEmail = to,
-            Subject = subject,
-            HtmlBody = htmlBody,
-            EventType = eventType,
-            LastErrorMessage = lastErrorMessage,
-            RetryCount = MaxAttempts,
-            LastAttemptAt = DateTime.UtcNow
-        };
+            // Oppdater det eksisterende bufferdokumentet i stedet for å opprette et duplikat
+            await failedNotificationRepository.MarkRetryFailedAsync(existingNotificationId.Value, lastErrorMessage,
+                MaxAttempts, cancellationToken);
+        }
+        else
+        {
+            var failedNotification = new FailedNotification
+            {
+                RecipientEmail = to,
+                Subject = subject,
+                HtmlBody = htmlBody,
+                EventType = eventType,
+                LastErrorMessage = lastErrorMessage,
+                RetryCount = MaxAttempts,
+                LastAttemptAt = DateTime.UtcNow
+            };
 
-        await failedNotificationRepository.AddAsync(failedNotification, cancellationToken);
+            await failedNotificationRepository.AddAsync(failedNotification, cancellationToken);
+        }
 
         await HandleAdminNotificationAsync(to, subject, lastErrorMessage, cancellationToken);
+
+        return false;
     }
 
     private static bool IsHardBounce(EmailDeliveryException ex)

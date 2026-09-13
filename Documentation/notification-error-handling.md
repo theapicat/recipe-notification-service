@@ -108,7 +108,9 @@ Når `recipe-notification-service` starter opp, kjøres en oppstartsjobb som tel
 3. `recipe-notification-service` returnerer listen fra MongoDB.
 4. Administrator utbedrer den underliggende feilen (f.eks. retter nettverk/SMTP-konfigurasjon) og velger enten **Slett** eller **Prøv på nytt** (enkeltvis eller som bulk):
 * **Ved Sletting:** Core API sender `DeleteFailedNotificationCommand`. Dokumentet fjernes fra MongoDB.
-* **Ved Re-send / Tilbakestilling:** Core API sender `RetryFailedNotificationCommand`. `PendingEmailService` kjøres på nytt for de valgte e-postene.
+* **Ved Re-send / Tilbakestilling:** Core API sender `RetryFailedNotificationCommand`. `RetryCount` nullstilles først på de valgte dokumentene, deretter kjøres `PendingEmailService` på nytt for hver e-post med dokumentets id.
+  * **Kun ved vellykket levering** slettes dokumentet fra MongoDB.
+  * **Feiler re-forsøket på nytt** (inkludert hard bounce) beholdes dokumentet **uendret i bufferen** — det slettes aldri automatisk, og oppdateres in-place (ny feilmelding/tidspunkt) fremfor å opprette et duplikat. Eneste vei til å fjerne det er en eksplisitt `DeleteFailedNotificationCommand` fra admin.
 
 
 5. Når alle feilede e-poster er enten sendt eller slettet, og antall dokumenter i MongoDB når **0**:

@@ -26,16 +26,15 @@ public class RetryFailedNotificationCommandConsumer(
         var emailsToRetry = pendingEmails.Where(x => ids.Contains(x.Id)).ToList();
 
         foreach (var email in emailsToRetry)
-        {
+            // PendingEmailService avgjør skjebnen til dokumentet: slettes kun ved vellykket levering,
+            // oppdateres in-place (aldri auto-slettes) dersom re-forsøket feiler på nytt.
             await pendingEmailService.ProcessEmailWithRetryAsync(
                 email.RecipientEmail,
                 email.Subject,
                 email.HtmlBody,
                 email.EventType,
-                context.CancellationToken);
-
-            await repository.DeleteAsync(email.Id, context.CancellationToken);
-        }
+                context.CancellationToken,
+                email.Id);
 
         var remainingCount = await repository.GetPendingCountAsync(context.CancellationToken);
         if (remainingCount == 0)

@@ -43,6 +43,17 @@ public class FailedNotificationRepository : IFailedNotificationRepository
         await _collection.UpdateManyAsync(filter, update, cancellationToken: cancellationToken);
     }
 
+    public async Task MarkRetryFailedAsync(Guid id, string errorMessage, int retryCount,
+        CancellationToken cancellationToken = default)
+    {
+        var update = Builders<FailedNotification>.Update
+            .Set(x => x.RetryCount, retryCount)
+            .Set(x => x.LastErrorMessage, errorMessage)
+            .Set(x => x.LastAttemptAt, DateTime.UtcNow);
+
+        await _collection.UpdateOneAsync(x => x.Id == id, update, cancellationToken: cancellationToken);
+    }
+
     public async Task<long> GetPendingCountAsync(CancellationToken cancellationToken = default)
     {
         return await _collection.CountDocumentsAsync(FilterDefinition<FailedNotification>.Empty,

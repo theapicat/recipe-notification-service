@@ -236,4 +236,94 @@ public class PendingEmailServiceTests
             .SendEmailAsync(AdminEmail, Arg.Any<string>(), Arg.Any<string>(),
                 cancellationToken: Arg.Any<CancellationToken>());
     }
+
+    [Fact]
+    public async Task ProcessEmailWithRetryAsync_WhenRetryOfExistingNotificationSucceeds_ShouldDeleteThatDocument()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        const string to = "retry@example.com";
+        const string subject = "Emne";
+        const string body = "<html>Body</html>";
+        const string eventType = "UserRegisteredEvent";
+
+        // Act
+        var wasDelivered = await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType,
+            CancellationToken.None, existingId);
+
+        // Assert
+        wasDelivered.ShouldBeTrue();
+
+        await _failedNotificationRepository.Received(1)
+            .DeleteAsync(existingId, Arg.Any<CancellationToken>());
+
+        await _failedNotificationRepository.DidNotReceiveWithAnyArgs()
+            .AddAsync(Arg.Any<FailedNotification>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task
+        ProcessEmailWithRetryAsync_WhenRetryOfExistingNotificationFailsAgain_ShouldUpdateInPlaceNotDeleteOrDuplicate()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        const string to = "retry-feilet@example.com";
+        const string subject = "Emne";
+        const string body = "<html>Body</html>";
+        const string eventType = "UserRegisteredEvent";
+        const string errorMessage = "SMTP timeout";
+
+        _emailDeliveryService
+            .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new EmailDeliveryException(errorMessage));
+
+        // Act
+        var wasDelivered = await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType,
+            CancellationToken.None, existingId);
+
+        // Assert: dokumentet skal ALDRI slettes automatisk når re-forsøket feiler
+        wasDelivered.ShouldBeFalse();
+
+        await _failedNotificationRepository.DidNotReceive()
+            .DeleteAsync(existingId, Arg.Any<CancellationToken>());
+
+        // Det eksisterende dokumentet oppdateres in-place - det opprettes IKKE et duplikat
+        await _failedNotificationRepository.Received(1)
+            .MarkRetryFailedAsync(existingId, errorMessage, 5, Arg.Any<CancellationToken>());
+
+        await _failedNotificationRepository.DidNotReceiveWithAnyArgs()
+            .AddAsync(Arg.Any<FailedNotification>(), Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task
+        ProcessEmailWithRetryAsync_WhenRetryOfExistingNotificationHitsHardBounce_ShouldNotDeleteOrDuplicate()
+    {
+        // Arrange
+        var existingId = Guid.NewGuid();
+        const string to = "ugyldig@example.com";
+        const string subject = "Emne";
+        const string body = "<html>Body</html>";
+        const string eventType = "UserRegisteredEvent";
+
+        _emailDeliveryService
+            .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>())
+            .ThrowsAsync(new EmailDeliveryException("550 User unknown"));
+
+        // Act
+        var wasDelivered = await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType,
+            CancellationToken.None, existingId);
+
+        // Assert: hard bounce er heller ikke en vellykket levering - dokumentet skal forbli urørt
+        wasDelivered.ShouldBeFalse();
+
+        await _failedNotificationRepository.DidNotReceive()
+            .DeleteAsync(existingId, Arg.Any<CancellationToken>());
+
+        await _failedNotificationRepository.DidNotReceiveWithAnyArgs()
+            .MarkRetryFailedAsync(Arg.Any<Guid>(), Arg.Any<string>(), Arg.Any<int>(), Arg.Any<CancellationToken>());
+
+        await _failedNotificationRepository.DidNotReceiveWithAnyArgs()
+            .AddAsync(Arg.Any<FailedNotification>(), Arg.Any<CancellationToken>());
+    }
 }
