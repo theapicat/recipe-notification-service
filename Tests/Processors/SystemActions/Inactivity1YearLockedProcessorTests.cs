@@ -1,11 +1,13 @@
 using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Options;
 using Infrastructure.Processors.SystemActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.SystemActions;
 
@@ -62,5 +64,29 @@ public class Inactivity1YearLockedProcessorTests
                 expectedHtml,
                 nameof(Inactivity1YearLockedEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new Inactivity1YearLockedEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "inactive1year@example.com",
+            Name = "Ola Nordmann",
+            LockedAt = DateTime.UtcNow
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

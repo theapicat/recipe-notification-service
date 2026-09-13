@@ -1,9 +1,11 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Processors.UserActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.UserActions;
 
@@ -56,5 +58,31 @@ public class PasswordChangedProcessorTests
                 expectedHtml,
                 nameof(PasswordChangedEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new PasswordChangedEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "user@example.com",
+            Name = "Ola Nordmann",
+            ChangedAt = DateTime.UtcNow,
+            IpAddress = "127.0.0.1",
+            DeviceInfo = "Chrome på Linux"
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

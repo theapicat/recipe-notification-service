@@ -1,11 +1,13 @@
 using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Options;
 using Infrastructure.Processors.SystemActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.SystemActions;
 
@@ -63,5 +65,30 @@ public class AccountDeletedBySystemProcessorTests
                 expectedHtml,
                 nameof(UserAccountDeletedBySystemEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new UserAccountDeletedBySystemEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "deleted@example.com",
+            Name = "Ola Nordmann",
+            DeletionReason = "Inaktivitet i over 30 dager",
+            DeletedAt = DateTime.UtcNow
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

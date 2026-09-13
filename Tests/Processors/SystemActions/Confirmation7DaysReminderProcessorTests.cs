@@ -1,11 +1,13 @@
 using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Options;
 using Infrastructure.Processors.SystemActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.SystemActions;
 
@@ -63,5 +65,30 @@ public class Confirmation7DaysReminderProcessorTests
                 expectedHtml,
                 nameof(Confirmation7DaysReminderEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new Confirmation7DaysReminderEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "unconfirmed@example.com",
+            Name = "Kari Nordmann",
+            ConfirmationLink = "https://kjokkenhylla.no/confirm?token=777",
+            RegisteredAt = DateTime.UtcNow.AddDays(-7)
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

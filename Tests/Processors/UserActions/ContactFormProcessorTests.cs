@@ -1,11 +1,13 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Processors.UserActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.UserActions;
 
@@ -76,5 +78,34 @@ public class ContactFormProcessorTests
                 userHtml,
                 nameof(ContactFormSubmittedEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenAdminTemplateRenderFails_ShouldPropagateExceptionAndSendNoEmails()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync("UserActions/ContactFormAdminNotification", Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new ContactFormSubmittedEvent
+        {
+            Name = "Kari Nordmann",
+            Email = "kari@example.com",
+            Subject = "Spørsmål angående oppskrifter",
+            Message = "Hvordan legger jeg til favoritter?",
+            SubmittedAt = DateTime.UtcNow
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        // Verken admin-varsel eller brukerkvittering skal sendes når admin-malen feiler
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
+
+        await _templateRenderService.DidNotReceive()
+            .RenderTemplateAsync("UserActions/ContactFormUserReceipt", Arg.Any<object>());
     }
 }

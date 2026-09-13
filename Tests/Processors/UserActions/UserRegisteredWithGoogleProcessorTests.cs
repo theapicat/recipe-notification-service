@@ -1,11 +1,13 @@
 using Contracts.Events.UserActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Options;
 using Infrastructure.Processors.UserActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.UserActions;
 
@@ -62,5 +64,29 @@ public class UserRegisteredWithGoogleProcessorTests
                 expectedHtml,
                 nameof(UserRegisteredWithGoogleEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new UserRegisteredWithGoogleEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "google@example.com",
+            Name = "Ola Nordmann",
+            RegisteredAt = DateTime.UtcNow
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

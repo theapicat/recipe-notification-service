@@ -1,9 +1,11 @@
 using Contracts.Events.AdminActions;
 using Infrastructure.EmailDelivery.Interfaces;
+using Infrastructure.Exceptions;
 using Infrastructure.Processors.AdminActions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using NSubstitute;
+using Shouldly;
 
 namespace Tests.Processors.AdminActions;
 
@@ -57,5 +59,30 @@ public class UserDeletedAndBlacklistedByAdminProcessorTests
                 expectedHtml,
                 nameof(UserDeletedAndBlacklistedByAdminEvent),
                 Arg.Any<CancellationToken>());
+    }
+
+    [Fact]
+    public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
+    {
+        // Arrange
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Any<object>())
+            .Returns(Task.FromException<string>(new TemplateRenderException("Mal-feil")));
+
+        var @event = new UserDeletedAndBlacklistedByAdminEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "blacklisted@example.com",
+            Name = "Uønsket Bruker",
+            Reason = "Brukervilkår brutt",
+            DeletedAt = DateTime.UtcNow
+        };
+
+        // Act & Assert
+        await Should.ThrowAsync<TemplateRenderException>(() =>
+            _processor.ProcessAsync(@event, CancellationToken.None));
+
+        await _pendingEmailService.DidNotReceiveWithAnyArgs()
+            .ProcessEmailWithRetryAsync(default!, default!, default!, default!);
     }
 }

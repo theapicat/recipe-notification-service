@@ -7,14 +7,23 @@
 ## 🏛️ Arkitektur og Nøkkelkonsepter
 
 * **Asynkron meldingsbehandling:** Integrert med MassTransit over RabbitMQ.
-* **Malmotor:** Scriban HTML-maler strukturert under domenespesifikke mapper (`UserActions`, `SystemActions`, `AdminActions`).
+* **Malmotor:** Scriban HTML-maler strukturert under domenespesifikke mapper (`UserActions`, `SystemActions`, `AdminActions`), med felles header/footer/branding i én delt layout (`_Layout.html`).
 * **Resiliens & Feilhåndtering:**
   * **Fail-Fast:** Malkompilerings- og syntaksfeil kaster `TemplateRenderException` og avbrytes umiddelbart uten gjenforsøk.
-  * **In-line Retry Strategy:** Transient feil mot SMTP prøves på nytt opptil 5 ganger før meldingen paktles og lagres i MongoDB.
+  * **In-line Retry Strategy:** Transient feil mot SMTP prøves på nytt opptil 5 ganger før meldingen pakkes og lagres i MongoDB.
   * **Hard Bounce Detection:** Ved permanent avviste adresser (f.eks. `550 User unknown`) avbrytes videre forsøk, og `InvalidEmailDetectedEvent` publiseres til Auth API.
 * **Tilstandsstyring & Admin-varsling:**
   * Singleton `NotificationStateStore` sporer om det finnes ubehandlede e-poster og sikrer avduplisert e-postvarsel til administrator.
   * Egen oppstartsjobb (`StateStoreInitializerHostedService`) sjekker MongoDB ved applikasjonsstart og setter tilstand dersom uleverte meldinger gjenstår.
+
+📚 Full arkitektur- og driftsdokumentasjon ligger i [`Documentation/`](Documentation/01-architecture-and-setup.md):
+
+1. [Arkitektur og oppsett](Documentation/01-architecture-and-setup.md)
+2. [Events, Commands og meldingsmønster](Documentation/02-events-and-messaging.md)
+3. [E-postmaler, layout og design](Documentation/03-email-templates-and-design.md)
+4. [Feilhåndtering og resiliens](Documentation/04-error-handling-and-resilience.md)
+5. [Notification Management og planlagt arbeid](Documentation/05-notification-management-and-planned-work.md)
+6. [Teststrategi](Documentation/06-test-strategy.md)
 
 ---
 
@@ -71,6 +80,10 @@ recipe-notification-service/
 * `RetryFailedNotificationCommand` — Re-prosesser valgte feilede e-poster på nytt.
 * `DeleteFailedNotificationCommand` — Slett uleverte e-poster fra bufferen.
 
+> 🔮 **Planlagt:** Denne administrasjonsflyten (redigering, endring og retry av usendte e-poster) er
+> planlagt flyttet til en egen mikrotjeneste, `recipe-system-api`. Se
+> [Documentation/05-notification-management-and-planned-work.md](Documentation/05-notification-management-and-planned-work.md).
+
 ---
 
 ## 🐳 Containerisering & Kjøring
@@ -83,6 +96,13 @@ Tjenesten kjører isolert i sin egen **Docker-container** som en integrert del a
 ---
 
 ## 🔮 Fremtidige Utvidelser (Planlegges)
+
+* [ ] **Utskilling av Notification Management til `recipe-system-api`**
+* All redigering, endring og retry av usendte/feilede e-poster er planlagt flyttet fra dagens direkte
+  MassTransit-kommunikasjon mellom Core API og denne tjenesten, til en egen, ny mikrotjeneste kalt
+  `recipe-system-api`. Ikke påbegynt — detaljert design gjenstår. Se
+  [Documentation/05-notification-management-and-planned-work.md](Documentation/05-notification-management-and-planned-work.md).
+
 
 * [ ] **Optimalisering av Maler & Ressurser**
 * Erstatte inlinede SVG-ikoner i HTML-malene med eksterne bildelenker (URL-ressurser fra sentralt CDN/hosting) for bedre vedlikeholdbarhet og mindre malstørrelse.
