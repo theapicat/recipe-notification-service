@@ -1,0 +1,24 @@
+networks:
+  recipe-net:
+    name: recipe-net
+    external: true
+
+services:
+  recipe-notification-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: recipe-notification-service
+    restart: unless-stopped
+    environment:
+      - DOTNET_ENVIRONMENT=Development
+      - AppSettings__FrontendUrl=${FRONTEND_URL:-http://localhost:3000}
+      # Overstyrer til interne container-navn på recipe-net (appsettings*.json peker mot localhost,
+      # som kun fungerer når tjenesten kjøres direkte på host-maskinen).
+      - RabbitMQ__Host=recipe-message-broker
+      - MongoDbSettings__ConnectionString=mongodb://mongo_user:mongo_secure_password_dev@recipe-mongo-db:27017/recipe_notification_db?authSource=admin
+      - SmtpSettings__Host=recipe-mailpit
+      - SmtpSettings__AdminNotificationEmail=${ADMIN_NOTIFICATION_EMAIL:-admin@kjokkenhylla.no}
+      - Serilog__WriteTo__1__Args__serverUrl=http://recipe-seq:80
+    networks:
+      - recipe-net

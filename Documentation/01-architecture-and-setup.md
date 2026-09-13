@@ -92,16 +92,31 @@ miljøvariabel-overstyring i Docker Compose:
 
 ## Kjøring lokalt
 
-Tjenesten forventer at følgende kjører (normalt via plattformens felles `docker-compose`-oppsett):
+Tjenesten forventer at følgende kjører (styrt av det separate `recipe-infrastructure`-prosjektets
+docker-compose, som også oppretter det delte `recipe-net`-nettverket):
 
-* **RabbitMQ** - meldingsbuss
-* **MongoDB** - transient feilbuffer
-* **Mailpit** (eller tilsvarende) - lokal SMTP-mottaker på `localhost:1025`
-* **Seq** - loggvisning
+* **RabbitMQ** (`recipe-message-broker`) - meldingsbuss
+* **MongoDB** (`recipe-mongo-db`) - transient feilbuffer
+* **Mailpit** (`recipe-mailpit`) - lokal SMTP-mottaker
+* **Seq** (`recipe-seq`) - loggvisning
+
+**Alternativ 1 - kjør direkte på host-maskinen** (bruker `appsettings.Development.json`, som peker mot
+`localhost` og de porene infrastrukturen eksponerer utad):
 
 ```bash
 dotnet run --project Service
 ```
+
+**Alternativ 2 - kjør som container på `recipe-net`** (bruker miljøvariabel-overstyringene i
+`docker-compose.yml`, som peker mot interne container-navn i stedet for `localhost`):
+
+```bash
+docker compose up --build
+```
+
+Se [`Dockerfile`](../Dockerfile) og [`docker-compose.yml`](../docker-compose.yml) - basert på
+`mcr.microsoft.com/dotnet/aspnet:10.0` (ikke `dotnet/runtime`), fordi `Serilog.AspNetCore` krever
+`Microsoft.AspNetCore.App`-rammeverket ved kjøretid selv om tjenesten ikke eksponerer HTTP.
 
 ## Bygge og teste
 

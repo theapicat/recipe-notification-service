@@ -88,10 +88,20 @@ recipe-notification-service/
 
 ## 🐳 Containerisering & Kjøring
 
-Tjenesten kjører isolert i sin egen **Docker-container** som en integrert del av Kjøkkenhylla-økosystemet:
+Tjenesten kjører isolert i sin egen **Docker-container**, koblet til det delte `recipe-net`-nettverket
+sammen med resten av Kjøkkenhylla-økosystemet:
 
-* **Egen Dockerfile:** Bygget som en lettvekts .NET Worker Service-container.
-* **Orkestrering:** Kjører sammen med RabbitMQ, MongoDB, Mailpit og de øvrige mikrotjenestene via plattformens felles `docker-compose`-oppsett.
+* **Egen Dockerfile:** Multi-stage build. Bruker `dotnet/aspnet` som kjøretidsbase (ikke `dotnet/runtime`)
+  fordi `Serilog.AspNetCore` krever `Microsoft.AspNetCore.App`-rammeverket ved kjøretid, selv om tjenesten
+  selv ikke eksponerer HTTP.
+* **Egen `docker-compose.yml`:** Bygger og kjører kun denne tjenesten, koblet til det **eksterne**
+  `recipe-net`-nettverket. RabbitMQ, MongoDB, Mailpit og Seq eies og driftes separat av
+  `recipe-infrastructure`-prosjektet - denne composen forutsetter at det nettverket/de tjenestene
+  allerede kjører.
+
+```bash
+docker compose up --build
+```
 
 ---
 
