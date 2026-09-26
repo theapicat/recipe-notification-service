@@ -12,6 +12,8 @@ public class PasswordChangedProcessor(
     IPendingEmailService pendingEmailService,
     ILogger<PasswordChangedProcessor> logger) : IEventProcessor<PasswordChangedEvent>
 {
+    public const string UnknownValueText = "Ukjent";
+
     public async Task ProcessAsync(PasswordChangedEvent eventData, CancellationToken cancellationToken = default)
     {
         logger.LogInformation("Behandler sikkerhetsvarsel om endret passord for {Email}", eventData.Email);
@@ -20,8 +22,8 @@ public class PasswordChangedProcessor(
         {
             name = eventData.Name,
             changed_at = eventData.ChangedAt.ToNorwegianDisplayFormat(),
-            device_info = eventData.DeviceInfo,
-            ip_address = eventData.IpAddress
+            device_info = string.IsNullOrWhiteSpace(eventData.DeviceInfo) ? UnknownValueText : eventData.DeviceInfo,
+            ip_address = string.IsNullOrWhiteSpace(eventData.IpAddress) ? UnknownValueText : eventData.IpAddress
         };
 
         var htmlBody =

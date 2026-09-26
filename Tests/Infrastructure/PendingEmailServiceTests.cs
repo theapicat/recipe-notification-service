@@ -1,13 +1,15 @@
-using Contracts.Events;
+using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery;
 using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Exceptions;
 using Infrastructure.State;
 using Infrastructure.TemplateService.Interfaces;
+using MailKit.Net.Smtp;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using MimeKit;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using Persistence.Entities;
@@ -104,13 +106,21 @@ public class PendingEmailServiceTests
         _stateStore.HasPendingNotifications.ShouldBeFalse();
     }
 
+    private static EmailDeliveryException SmtpFailure(SmtpErrorCode errorCode, SmtpStatusCode statusCode,
+        string serverMessage, string to = "ugyldig@example.com")
+    {
+        // Samme innpakning som EmailDeliveryService gjør rundt MailKit-unntaket
+        return new EmailDeliveryException($"Klarte ikke å sende e-post til {to} med emne 'Test'",
+            new SmtpCommandException(errorCode, statusCode, MailboxAddress.Parse(to), serverMessage));
+    }
+
     [Theory]
-    [InlineData("550 5.1.1 User unknown")]
-    [InlineData("Recipient address rejected: Access denied")]
-    [InlineData("Mailbox unavailable")]
-    [InlineData("Address does not exist")]
+    [InlineData(SmtpStatusCode.MailboxUnavailable, "5.1.1 User unknown")]
+    [InlineData(SmtpStatusCode.MailboxUnavailable, "Recipient address rejected: User does not exist")]
+    [InlineData(SmtpStatusCode.UserNotLocalTryAlternatePath, "User not local")]
+    [InlineData(SmtpStatusCode.MailboxNameNotAllowed, "5.1.3 Bad recipient address syntax")]
     public async Task ProcessEmailWithRetryAsync_WhenHardBounce_ShouldPublishInvalidEmailDetectedEventAndAbort(
-        string errorMessage)
+        SmtpStatusCode statusCode, string serverMessage)
     {
         // Arrange
         const string to = "ugyldig@example.com";
@@ -120,7 +130,7 @@ public class PendingEmailServiceTests
 
         _emailDeliveryService
             .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>())
-            .ThrowsAsync(new EmailDeliveryException(errorMessage));
+            .ThrowsAsync(SmtpFailure(SmtpErrorCode.RecipientNotAccepted, statusCode, serverMessage, to));
 
         // Act
         await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType, CancellationToken.None);
@@ -130,16 +140,60 @@ public class PendingEmailServiceTests
         await _emailDeliveryService.Received(1)
             .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>());
 
-        // Skal publisere InvalidEmailDetectedEvent til Auth API
+        // Skal publisere InvalidEmailDetectedEvent til Auth API, med SMTP-serverens kode og svar som begrunnelse
         await _publishEndpoint.Received(1)
             .Publish(Arg.Is<InvalidEmailDetectedEvent>(e =>
                     e.Email == to &&
-                    e.Reason == errorMessage),
+                    e.Reason == $"{(int)statusCode} {serverMessage}"),
                 Arg.Any<CancellationToken>());
 
         // Skal IKKE lagre i MongoDB
         await _failedNotificationRepository.DidNotReceiveWithAnyArgs()
             .AddAsync(Arg.Any<FailedNotification>(), Arg.Any<CancellationToken>());
+    }
+
+    public static TheoryData<EmailDeliveryException> NotHardBounceFailures => new()
+    {
+        // Tekst som tidligere ga falske treff: "550" i adressen, "does not exist" i en vanlig feil
+        new EmailDeliveryException("Klarte ikke å sende e-post til ola550@example.com med emne 'Test'",
+            new TimeoutException("The operation has timed out.")),
+        new EmailDeliveryException("SMTP host does not exist"),
+        // Meldingen avvist (spam/innhold) - adressen kan være gyldig
+        SmtpFailure(SmtpErrorCode.MessageNotAccepted, SmtpStatusCode.MailboxUnavailable,
+            "5.7.1 Message rejected as spam"),
+        // Mottaker avvist av policy (5.7.x), ikke fordi adressen er ugyldig
+        SmtpFailure(SmtpErrorCode.RecipientNotAccepted, SmtpStatusCode.MailboxUnavailable,
+            "5.7.1 Relay access denied"),
+        // Midlertidig avvisning (4xx)
+        SmtpFailure(SmtpErrorCode.RecipientNotAccepted, SmtpStatusCode.MailboxBusy, "4.2.1 Mailbox busy")
+    };
+
+    [Theory]
+    [MemberData(nameof(NotHardBounceFailures))]
+    public async Task ProcessEmailWithRetryAsync_WhenFailureIsNotHardBounce_ShouldRetryAndNotPublishInvalidEmail(
+        EmailDeliveryException failure)
+    {
+        // Arrange
+        const string to = "ola550@example.com";
+        const string subject = "Test";
+        const string body = "<html>Test</html>";
+
+        // Første forsøk feiler, andre lykkes (holder testen kort; backoff er 2 s før forsøk 2)
+        _emailDeliveryService
+            .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>())
+            .Returns(_ => Task.FromException(failure), _ => Task.CompletedTask);
+
+        // Act
+        var wasDelivered =
+            await _service.ProcessEmailWithRetryAsync(to, subject, body, "TestEvent", CancellationToken.None);
+
+        // Assert: feilen ble behandlet som forbigående (nytt forsøk), og auth varsles ikke om ugyldig adresse
+        wasDelivered.ShouldBeTrue();
+        await _emailDeliveryService.Received(2)
+            .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>());
+
+        await _publishEndpoint.DidNotReceiveWithAnyArgs()
+            .Publish(Arg.Any<InvalidEmailDetectedEvent>(), Arg.Any<CancellationToken>());
     }
 
     [Fact]
@@ -185,7 +239,7 @@ public class PendingEmailServiceTests
     }
 
     [Fact]
-    public async Task ProcessEmailWithRetryAsync_WhenAll5AttemptsFail_ShouldHtmlEncodeUntrustedFieldsInAdminAlert()
+    public async Task ProcessEmailWithRetryAsync_WhenAll5AttemptsFail_ShouldPassRawFieldsToAdminAlert()
     {
         // Arrange
         const string to = "feilet@example.com";
@@ -201,11 +255,11 @@ public class PendingEmailServiceTests
         // Act
         await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType, CancellationToken.None);
 
-        // Assert: mottaker/emne/feilmelding skal HTML-encodes før de sendes til malmotoren
+        // Assert: verdiene sendes uendret; TemplateRenderService escaper dem (ellers blir de escapet to ganger)
         await _templateRenderService.Received(1)
             .RenderTemplateAsync("AdminActions/PendingEmailAlert", Arg.Is<object>(model =>
-                !model.ToString()!.Contains("<script>") &&
-                !model.ToString()!.Contains("<img")));
+                model.ToString()!.Contains(subject) &&
+                model.ToString()!.Contains(errorMessage)));
     }
 
     [Fact]
@@ -308,7 +362,8 @@ public class PendingEmailServiceTests
 
         _emailDeliveryService
             .SendEmailAsync(to, subject, body, cancellationToken: Arg.Any<CancellationToken>())
-            .ThrowsAsync(new EmailDeliveryException("550 User unknown"));
+            .ThrowsAsync(SmtpFailure(SmtpErrorCode.RecipientNotAccepted, SmtpStatusCode.MailboxUnavailable,
+                "5.1.1 User unknown", to));
 
         // Act
         var wasDelivered = await _service.ProcessEmailWithRetryAsync(to, subject, body, eventType,

@@ -155,4 +155,73 @@ public class TemplateRenderServiceTests
         html.ShouldContain("Automatisk systemvarsel fra recipe-notification-service.");
         html.ShouldNotContain("Med vennlig hilsen,");
     }
+
+    [Theory]
+    [InlineData("UserActions/ContactFormUserReceipt")]
+    [InlineData("UserActions/ContactFormAdminNotification")]
+    [InlineData("AdminActions/AdminCustomEmail")]
+    [InlineData("AdminActions/PendingEmailAlert")]
+    public async Task RenderTemplateAsync_ShouldHtmlEscapeStringValuesFromModel(string templateName)
+    {
+        // Arrange
+        var model = new
+        {
+            name = "<b>x</b>",
+            email = "test@example.com",
+            subject = "<b>x</b>",
+            message = "<a href=\"https://falsk-side.no\">Logg inn her</a>",
+            submitted_at = "10.10.2026 12:00",
+            frontend_url = "https://kjokkenhylla.no",
+            recipient = "mottaker@example.com",
+            error_message = "<b>x</b>"
+        };
+
+        // Act
+        var html = await _service.RenderTemplateAsync(templateName, model);
+
+        // Assert
+        html.ShouldContain("&lt;b&gt;x&lt;/b&gt;");
+        html.ShouldNotContain("<b>x</b>");
+        html.ShouldNotContain("&amp;lt;");
+        html.ShouldNotContain("<a href=\"https://falsk-side.no\">");
+    }
+
+    [Fact]
+    public async Task RenderTemplateAsync_ShouldKeepLinksWorkingAfterEscaping()
+    {
+        // Arrange
+        const string templateName = "UserActions/UserRegisteredWelcome";
+        var model = new
+        {
+            name = "Test",
+            confirmation_link = "https://kjokkenhylla.no/confirm?userId=1&token=abc",
+            terms_link = "https://kjokkenhylla.no/legal/terms"
+        };
+
+        // Act
+        var html = await _service.RenderTemplateAsync(templateName, model);
+
+        // Assert: & blir &amp; i href, som nettleser/e-postklient tolker tilbake til &
+        html.ShouldContain("https://kjokkenhylla.no/confirm?userId=1&amp;token=abc");
+    }
+
+    [Fact]
+    public async Task RenderTemplateAsync_UserDeletedAndBlacklistedByAdmin_ShouldAlwaysShowReasonBlock()
+    {
+        // Arrange
+        const string templateName = "AdminActions/UserDeletedAndBlacklistedByAdmin";
+        var model = new
+        {
+            name = "Test",
+            email = "test@example.com",
+            reason = "Ingen begrunnelse oppgitt."
+        };
+
+        // Act
+        var html = await _service.RenderTemplateAsync(templateName, model);
+
+        // Assert
+        html.ShouldContain("Begrunnelse for");
+        html.ShouldContain("Ingen begrunnelse oppgitt.");
+    }
 }

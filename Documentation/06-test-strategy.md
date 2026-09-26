@@ -72,10 +72,13 @@ brukes ikke til mocking her, kun til DI og til consumer-testene (pilar 4).
   og at `Reset()`/`SetPendingStatus(false)` nullstiller `HasNotifiedAdmin`.
 * **`PendingEmailServiceTests`** dekker blant annet:
   * Suksess på 1. eller senere forsøk - ingen MongoDB-skriving.
-  * Hard bounce - stopper etter første forsøk, publiserer `InvalidEmailDetectedEvent`.
+  * Hard bounce (`SmtpCommandException` med `RecipientNotAccepted` + 5xx) - stopper etter første forsøk,
+    publiserer `InvalidEmailDetectedEvent` med SMTP-kode og serverens svar som `Reason`.
+  * Ikke hard bounce - «550» i mottakeradressen, tidsavbrudd, spamavvisning (`MessageNotAccepted`),
+    policy (`5.7.x`) og 4xx gir vanlig retry og **ingen** `InvalidEmailDetectedEvent`.
   * Alle 5 forsøk feiler - lagrer i MongoDB (`RetryCount = 5`) og sender avduplisert admin-varsel via
     Scriban-malen `AdminActions/PendingEmailAlert`, til den konfigurerte `AdminNotificationEmail`.
-  * At mottaker/emne/feilmelding HTML-encodes før de sendes til admin-malen.
+  * At mottaker/emne/feilmelding sendes uendret til admin-malen (escapingen skjer i `TemplateRenderService`).
   * Retry av et **eksisterende** dokument (`existingNotificationId` satt): slettes kun ved suksess,
     oppdateres in-place (`MarkRetryFailedAsync`) - aldri slettet eller duplisert - ved fornyet feil eller
     hard bounce.

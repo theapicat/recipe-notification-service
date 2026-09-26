@@ -61,6 +61,36 @@ public class PasswordChangedProcessorTests
     }
 
     [Fact]
+    public async Task ProcessAsync_WhenIpAddressAndDeviceInfoAreMissing_ShouldUseUnknownText()
+    {
+        // Arrange
+        object capturedModel = null;
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Do<object>(m => capturedModel = m))
+            .Returns(Task.FromResult("<html></html>"));
+
+        var @event = new PasswordChangedEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "user@example.com",
+            Name = "Ola Nordmann",
+            ChangedAt = DateTime.UtcNow,
+            IpAddress = null,
+            DeviceInfo = null
+        };
+
+        // Act
+        await _processor.ProcessAsync(@event, CancellationToken.None);
+
+        // Assert
+        capturedModel.ShouldNotBeNull();
+        capturedModel.GetType().GetProperty("ip_address")!.GetValue(capturedModel)
+            .ShouldBe(PasswordChangedProcessor.UnknownValueText);
+        capturedModel.GetType().GetProperty("device_info")!.GetValue(capturedModel)
+            .ShouldBe(PasswordChangedProcessor.UnknownValueText);
+    }
+
+    [Fact]
     public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
     {
         // Arrange

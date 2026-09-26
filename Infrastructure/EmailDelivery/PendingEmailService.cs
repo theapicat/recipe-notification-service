@@ -1,10 +1,10 @@
-using System.Net;
-using Contracts.Events;
+using Contracts.Events.SystemActions;
 using Infrastructure.EmailDelivery.Configurations;
 using Infrastructure.EmailDelivery.Interfaces;
 using Infrastructure.Exceptions;
 using Infrastructure.State.Interfaces;
 using Infrastructure.TemplateService.Interfaces;
+using MailKit.Net.Smtp;
 using MassTransit;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
@@ -54,14 +54,14 @@ public class PendingEmailService(
                 logger.LogWarning(ex, "Utsendingsforsøk {Attempt} feilet for {To}", attempt, to);
 
                 // Sjekk om e-posten er permanent avvist (Hard bounce / ugyldig mottaker)
-                if (IsHardBounce(ex))
+                if (IsHardBounce(ex, out var smtpException))
                 {
                     logger.LogError("Hard bounce registrert for {To}. Avbryter gjenforsøk og varsler Auth API.", to);
 
                     await publishEndpoint.Publish(new InvalidEmailDetectedEvent
                     {
                         Email = to,
-                        Reason = ex.Message,
+                        Reason = $"{(int)smtpException.StatusCode} {smtpException.Message}",
                         DetectedAt = DateTime.UtcNow
                     }, cancellationToken);
 
@@ -103,16 +103,17 @@ public class PendingEmailService(
         return false;
     }
 
-    private static bool IsHardBounce(EmailDeliveryException ex)
+    // Hard bounce = SMTP-serveren avviste selve mottakeren (RCPT TO) med en permanent 5xx-kode.
+    // Vi ser på MailKit-unntaket, ikke på teksten: den innpakkede meldingen inneholder mottakeradresse og emne,
+    // så et tekstsøk etter f.eks. "550" ga falske treff. Avvisning av selve meldingen (spam/innhold, DATA) og
+    // policy-avvisninger (utvidet kode 5.7.x) betyr ikke at adressen er ugyldig, og regnes ikke som hard bounce.
+    private static bool IsHardBounce(EmailDeliveryException ex, out SmtpCommandException smtpException)
     {
-        var message = ex.Message.ToLowerInvariant();
-        if (ex.InnerException != null) message += " " + ex.InnerException.Message.ToLowerInvariant();
+        smtpException = ex.InnerException as SmtpCommandException;
 
-        return message.Contains("550") ||
-               message.Contains("user unknown") ||
-               message.Contains("recipient address rejected") ||
-               message.Contains("mailbox unavailable") ||
-               message.Contains("does not exist");
+        return smtpException is { ErrorCode: SmtpErrorCode.RecipientNotAccepted } &&
+               (int)smtpException.StatusCode >= 500 &&
+               !smtpException.Message.Contains("5.7.");
     }
 
     private async Task HandleAdminNotificationAsync(string recipient, string subject, string errorMessage,
@@ -127,11 +128,12 @@ public class PendingEmailService(
 
             try
             {
+                // Verdiene HTML-escapes sentralt i TemplateRenderService, så de sendes inn uendret her
                 var templateModel = new
                 {
-                    recipient = WebUtility.HtmlEncode(recipient),
-                    subject = WebUtility.HtmlEncode(subject),
-                    error_message = WebUtility.HtmlEncode(errorMessage)
+                    recipient,
+                    subject,
+                    error_message = errorMessage
                 };
 
                 var adminBody =

@@ -11,6 +11,8 @@ public class UserDeletedAndBlacklistedByAdminProcessor(
     IPendingEmailService pendingEmailService,
     ILogger<UserDeletedAndBlacklistedByAdminProcessor> logger) : IEventProcessor<UserDeletedAndBlacklistedByAdminEvent>
 {
+    public const string MissingReasonText = "Ingen begrunnelse oppgitt.";
+
     public async Task ProcessAsync(UserDeletedAndBlacklistedByAdminEvent eventData,
         CancellationToken cancellationToken = default)
     {
@@ -20,7 +22,7 @@ public class UserDeletedAndBlacklistedByAdminProcessor(
         {
             name = eventData.Name,
             email = eventData.Email,
-            reason = eventData.Reason
+            reason = string.IsNullOrWhiteSpace(eventData.Reason) ? MissingReasonText : eventData.Reason
         };
 
         var htmlBody = await templateRenderService.RenderTemplateAsync(

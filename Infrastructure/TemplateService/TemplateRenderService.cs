@@ -2,6 +2,7 @@ using Infrastructure.Exceptions;
 using Infrastructure.TemplateService.Interfaces;
 using Microsoft.Extensions.Logging;
 using Scriban;
+using Scriban.Functions;
 using Scriban.Runtime;
 
 namespace Infrastructure.TemplateService;
@@ -50,6 +51,7 @@ public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITem
         {
             var scriptObject = new ScriptObject();
             scriptObject.Import(model);
+            EscapeStringValues(scriptObject);
 
             var context = new TemplateContext
             {
@@ -64,6 +66,18 @@ public class TemplateRenderService(ILogger<TemplateRenderService> logger) : ITem
         {
             logger.LogError(ex, "Feil under rendering av Scriban-mal {TemplateName}", templateName);
             throw new TemplateRenderException($"Kjøretidsfeil under rendering av malen '{templateName}'.", ex);
+        }
+    }
+
+    // Scriban escaper ikke automatisk. Alle strengverdier i modellen kommer utenfra (brukere, admin, klienter),
+    // så de HTML-escapes her før rendering. Verdier som settes inne i malene (title, footer_note, capture content)
+    // er ikke en del av modellen og berøres ikke.
+    private static void EscapeStringValues(ScriptObject scriptObject)
+    {
+        foreach (var key in scriptObject.Keys.ToList())
+        {
+            if (scriptObject[key] is string value)
+                scriptObject.SetValue(key, HtmlFunctions.Escape(value), false);
         }
     }
 }

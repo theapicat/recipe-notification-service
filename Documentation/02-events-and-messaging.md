@@ -28,11 +28,9 @@ Trigges direkte av brukerhandlinger (typisk fra `recipe-auth-api` / kontaktskjem
 | `UserRegisteredWithGoogleEvent` | `UserId`, `Email`, `Name`, `RegisteredAt` | Velkomst til bruker registrert via Google OAuth (ingen bekreftelseslenke). |
 | `ResendEmailConfirmationRequestedEvent` | `UserId`, `Email`, `Name`, `ConfirmationLink`, `RequestedAt` | Bruker ber om ny bekreftelseslenke. |
 | `PasswordResetRequestedEvent` | `UserId`, `Email`, `Name`, `ResetLink`, `RequestedAt` | Glemt passord - inneholder tilbakestillingslenke. |
-| `PasswordChangedEvent` | `UserId`, `Name`, `Email`, `ChangedAt`, `IpAddress`, `DeviceInfo` | Sikkerhetsvarsel om at passordet er endret. |
+| `PasswordChangedEvent` | `UserId`, `Name`, `Email`, `ChangedAt`, `IpAddress?`, `DeviceInfo?` | Sikkerhetsvarsel om at passordet er endret. Mangler IP/enhet, vises «Ukjent». |
 | `ContactFormSubmittedEvent` | `Name`, `Email`, `Subject`, `Message`, `SubmittedAt` | Genererer to e-poster: varsel til admin/support og kvittering til avsender. |
-| `UserAccountDeletedByUserEvent`\* | `UserId`, `Email`, `Name`, `DeletedAt` | Bekreftelse på brukerinitiert kontosletting. |
-
-\* Klassen heter `UserAccountDeletedByUserEvent`, selv om filen ligger som `AccountDeletedByUserEvent.cs`.
+| `UserAccountDeletedByUserEvent` | `UserId`, `Email`, `Name`, `DeletedAt` | Bekreftelse på brukerinitiert kontosletting. |
 
 ---
 
@@ -47,9 +45,7 @@ bekreftelsespåminnelser).
 | `Confirmation14DaysReminderEvent` | `UserId`, `Email`, `Name`, `ConfirmationLink`, `LockedAt` | Varsel om at ubekreftet konto er midlertidig sperret etter 14 dager. |
 | `Inactivity6MonthsWarningEvent` | `UserId`, `Email`, `Name`, `WarnedAt` | "Vi savner deg"-varsel etter 6 måneders inaktivitet. |
 | `Inactivity1YearLockedEvent` | `UserId`, `Email`, `Name`, `LockedAt` | Varsel om deaktivering etter 1 års inaktivitet. |
-| `UserAccountDeletedBySystemEvent`\* | `UserId`, `Email`, `Name`, `DeletionReason`, `DeletedAt` | Bekreftelse på automatisk systemstyrt kontosletting. |
-
-\* Klassen heter `UserAccountDeletedBySystemEvent`, selv om filen ligger som `AccountDeletedBySystemEvent.cs`.
+| `UserAccountDeletedBySystemEvent` | `UserId`, `Email`, `Name`, `DeletionReason`, `DeletedAt` | Bekreftelse på automatisk systemstyrt kontosletting. |
 
 ---
 
@@ -62,14 +58,14 @@ Trigges når en administrator utfører en manuell handling via admin-panelet.
 | `AdminCustomEmailRequestedEvent` | `UserId`, `Email`, `Name`, `Subject`, `Message`, `SentAt` | Egendefinert e-post sendt manuelt av admin. |
 | `EmailManuallyConfirmedByAdminEvent` | `UserId`, `Email`, `Name`, `ConfirmedAt` | E-postadresse bekreftet av admin. |
 | `UserAccountDeletedByAdminEvent` | `UserId`, `Email`, `Name`, `DeletedAt` | Konto slettet av admin. |
-| `UserDeletedAndBlacklistedByAdminEvent` | `UserId`, `Email`, `Name`, `Reason?`, `DeletedAt` | Konto slettet og e-postadresse svartelistet. |
+| `UserDeletedAndBlacklistedByAdminEvent` | `UserId`, `Email`, `Name`, `Reason?`, `DeletedAt` | Konto slettet og e-postadresse svartelistet. Mangler begrunnelse, vises «Ingen begrunnelse oppgitt.». |
 | `UserLockedByAdminEvent` | `UserId`, `Email`, `Name`, `ReasonDetails`, `LockedAt` | Konto midlertidig sperret, med begrunnelse. |
 | `UserUnlockedByAdminEvent` | `UserId`, `Email`, `Name`, `UnlockedAt` | Konto gjenåpnet. |
 | `UserUpdatedByAdminEvent` | `UserId`, `Email`, `Name`, `OldEmail`, `NewEmail`, `UpdatedAt` | Profilinformasjon oppdatert av admin. |
 
 ---
 
-## 🚨 Systemvarsel (`Contracts.Events`)
+## 🚨 Systemvarsel (`Contracts.Events.SystemActions`)
 
 | Event | Felter | Beskrivelse |
 | --- | --- | --- |
@@ -115,6 +111,38 @@ services.AddTransient<IEventProcessor<UserRegisteredEvent>, UserRegisteredProces
 // MassTransitExtensions.cs
 x.AddConsumer<UserRegisteredConsumer>();
 ```
+
+## Kønavn i RabbitMQ
+
+Hver consumer får sin egen kø. Hver kø som er bundet til en meldingstype får **sin egen kopi** av hver melding,
+mens flere prosesser som leser fra **samme** kø deler meldingene mellom seg (bare én får hver melding).
+
+Uten konfigurasjon navngir MassTransit køen etter consumer-klassen alene (`UserRegisteredConsumer` →
+`UserRegistered`). To tjenester med samme klassenavn ville da delt kø og stjålet meldinger fra hverandre, uten
+feilmelding. Det er reelt her: slettehendelsene konsumeres av både `recipe-core-api` og denne tjenesten, med
+like klassenavn (`AccountDeletedByUserConsumer` osv.).
+
+Derfor setter `MassTransitExtensions` en felles formatter med prefikset `MassTransitExtensions.QueuePrefix`:
+
+```csharp
+x.SetEndpointNameFormatter(new DefaultEndpointNameFormatter(QueuePrefix, false)); // QueuePrefix = "notification-"
+```
+
+| Consumer | Kø |
+| --- | --- |
+| `UserRegisteredConsumer` | `notification-UserRegistered` |
+| `AccountDeletedByUserConsumer` | `notification-AccountDeletedByUser` (core-api: `CoreApi-AccountDeletedByUser`) |
+| `RetryFailedNotificationCommandConsumer` | `notification-RetryFailedNotificationCommand` |
+
+* Prefikset skrives med **små bokstaver** (felles standard for alle tjenestene).
+* Nye consumere får prefikset automatisk - ingen `.Endpoint(...)` per consumer.
+* Endres et consumer-klassenavn eller prefikset, opprettes nye køer; de gamle blir liggende bundet og samler
+  kopier av alle meldinger til de slettes manuelt i RabbitMQ.
+* `Tests/Consumers/EndpointNamingTests.cs` sjekker at alle consumere har prefikset, at navnene er unike, og de
+  eksakte navnene for slettehendelsene.
+* Sender en annen tjeneste (f.eks. admin-dashbordet i core-api) en kommando til en **bestemt** kø, må den bruke
+  det prefiksede navnet (`queue:notification-RetryFailedNotificationCommand`). En request-klient uten adresse
+  (publiseres via meldingstypen) er uavhengig av kønavnet.
 
 ## Sjekkliste: legge til en ny e-postnotifikasjon
 

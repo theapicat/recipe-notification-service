@@ -61,6 +61,36 @@ public class UserDeletedAndBlacklistedByAdminProcessorTests
                 Arg.Any<CancellationToken>());
     }
 
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("   ")]
+    public async Task ProcessAsync_WhenReasonIsMissing_ShouldUseDefaultReasonText(string reason)
+    {
+        // Arrange
+        object capturedModel = null;
+        _templateRenderService
+            .RenderTemplateAsync(Arg.Any<string>(), Arg.Do<object>(m => capturedModel = m))
+            .Returns(Task.FromResult("<html></html>"));
+
+        var @event = new UserDeletedAndBlacklistedByAdminEvent
+        {
+            UserId = Guid.NewGuid(),
+            Email = "blacklisted@example.com",
+            Name = "Uønsket Bruker",
+            Reason = reason,
+            DeletedAt = DateTime.UtcNow
+        };
+
+        // Act
+        await _processor.ProcessAsync(@event, CancellationToken.None);
+
+        // Assert
+        capturedModel.ShouldNotBeNull();
+        capturedModel.GetType().GetProperty("reason")!.GetValue(capturedModel)
+            .ShouldBe(UserDeletedAndBlacklistedByAdminProcessor.MissingReasonText);
+    }
+
     [Fact]
     public async Task ProcessAsync_WhenTemplateRenderFails_ShouldPropagateException()
     {

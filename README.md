@@ -9,9 +9,9 @@
 * **Asynkron meldingsbehandling:** Integrert med MassTransit over RabbitMQ.
 * **Malmotor:** Scriban HTML-maler strukturert under domenespesifikke mapper (`UserActions`, `SystemActions`, `AdminActions`), med felles header/footer/branding i én delt layout (`_Layout.html`).
 * **Resiliens & Feilhåndtering:**
-  * **Fail-Fast:** Malkompilerings- og syntaksfeil kaster `TemplateRenderException` og avbrytes umiddelbart uten gjenforsøk.
+  * **Fail-Fast:** Malkompilerings- og syntaksfeil kaster `TemplateRenderException` og avbrytes umiddelbart uten gjenforsøk. Meldingen havner i køens `_error`-kø i RabbitMQ.
   * **In-line Retry Strategy:** Transient feil mot SMTP prøves på nytt opptil 5 ganger før meldingen pakkes og lagres i MongoDB.
-  * **Hard Bounce Detection:** Ved permanent avviste adresser (f.eks. `550 User unknown`) avbrytes videre forsøk, og `InvalidEmailDetectedEvent` publiseres til Auth API.
+  * **Hard Bounce Detection:** Avviser SMTP-serveren mottakeren permanent (MailKit `RecipientNotAccepted` + 5xx, ikke policy `5.7.x`), avbrytes videre forsøk, og `InvalidEmailDetectedEvent` publiseres til Auth API.
 * **Tilstandsstyring & Admin-varsling:**
   * Singleton `NotificationStateStore` sporer om det finnes ubehandlede e-poster og sikrer avduplisert e-postvarsel til administrator.
   * Egen oppstartsjobb (`StateStoreInitializerHostedService`) sjekker MongoDB ved applikasjonsstart og setter tilstand dersom uleverte meldinger gjenstår.

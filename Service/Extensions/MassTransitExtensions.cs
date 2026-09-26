@@ -8,12 +8,20 @@ namespace Service.Extensions;
 
 public static class MassTransitExtensions
 {
+    // Alle køer i denne tjenesten får prefikset "notification-" (f.eks. notification-AccountDeletedByUser).
+    // Uten prefiks navngir MassTransit køen etter consumer-klassen alene, og to tjenester med samme klassenavn
+    // (f.eks. AccountDeletedByUserConsumer i core og notification) ville delt kø og stjålet meldinger fra hverandre.
+    // Prefikset skrives med små bokstaver (felles standard for alle tjenestene).
+    public const string QueuePrefix = "notification-";
+
     public static IServiceCollection AddMassTransitServices(
         this IServiceCollection services,
         IConfiguration configuration)
     {
         services.AddMassTransit(x =>
         {
+            x.SetEndpointNameFormatter(new DefaultEndpointNameFormatter(QueuePrefix, false));
+
             // User Actions
             x.AddConsumer<AccountDeletedByUserConsumer>();
             x.AddConsumer<ContactFormSubmittedConsumer>();

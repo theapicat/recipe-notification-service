@@ -8,13 +8,25 @@ tilstandsovervåking i minnet og den transiente MongoDB-bufferen.
 1. **Fail-fast ved kritiske malfeil.** Mangler en Scriban-mal, har den syntaksfeil, eller mangler en
    påkrevd modellvariabel, kastes `TemplateRenderException` og prosessen for den meldingen avbrytes
    umiddelbart (ingen retry, ingen buffering) — se
-   [03-email-templates-and-design.md](03-email-templates-and-design.md).
+   [03-email-templates-and-design.md](03-email-templates-and-design.md). Unntaket slipper ut av consumeren.
+   Det er ikke satt opp retry/redelivery i MassTransit, så meldingen flyttes **med en gang** til køens
+   error-kø (`<kønavn>_error`, f.eks. `notification-UserRegistered_error`) i RabbitMQ, og MassTransit publiserer en
+   `Fault<TEvent>`. Meldingen blir altså **ikke** liggende i hovedkøen og leveres ikke på nytt av seg selv.
+   Etter at malen er rettet, kan meldingene flyttes tilbake fra error-køen (f.eks. «Move messages» i
+   RabbitMQ Management UI). Error-køene må derfor overvåkes; de vises ikke i admin-dashbordet.
 2. **In-line gjenforsøk ved transiente SMTP-feil.** `PendingEmailService` prøver opptil **5 ganger**,
    direkte i den samme skopede prosessen, med kort ventetid mellom forsøkene (`2 * forsøksnummer`
    sekunder).
-3. **Hard bounce avbryter umiddelbart.** Avviser SMTP-serveren permanent (`550`, "user unknown",
-   "recipient address rejected", "mailbox unavailable", "does not exist"), stoppes videre forsøk etter
-   **første** forsøk, og `InvalidEmailDetectedEvent` publiseres til `recipe-auth-api`.
+3. **Hard bounce avbryter umiddelbart.** Avviser SMTP-serveren selve **mottakeren** permanent, stoppes
+   videre forsøk etter **første** forsøk, og `InvalidEmailDetectedEvent` publiseres til `recipe-auth-api`
+   (`Reason` = SMTP-kode + serverens svar, f.eks. `550 5.1.1 User unknown`). Avgjørelsen tas på MailKit-unntaket
+   (`SmtpCommandException`, pakket inn i `EmailDeliveryException`), **ikke** på feilteksten:
+   * Hard bounce: `ErrorCode = RecipientNotAccepted` (avvist ved `RCPT TO`) **og** statuskode 5xx (f.eks. 550,
+     551, 553), **unntatt** når serverens svar har utvidet kode `5.7.x` (policy, f.eks. «Relay access denied»).
+   * Ikke hard bounce (vanlig retry): tilkoblings-/tidsavbruddsfeil, midlertidige 4xx-koder, og avvisning av
+     selve meldingen (`MessageNotAccepted`, f.eks. spamfilter) - da kan adressen være gyldig.
+   * Tidligere ble feilteksten søkt etter `550`, «does not exist» osv. Teksten inneholder mottakeradresse og
+     emne, så det ga falske treff (f.eks. en timeout for `ola550@…`), og auth kunne sperre en gyldig bruker.
 4. **MongoDB er kun en transient buffer.** Et dokument opprettes først når alle 5 in-line forsøk har
    feilet. Så snart e-posten leveres (ved første forsøk eller ved et senere re-forsøk fra admin), slettes
    dokumentet.
@@ -57,9 +69,9 @@ Ansvar:
   admin-retry-flyten (se under) til å avgjøre om det bufrede dokumentet skal slettes.
 
 Admin-varselet sendes via samme Scriban-vei som alt annet (`AdminActions/PendingEmailAlert.html`), til
-`SmtpSettings.AdminNotificationEmail` - **ikke** en hardkodet adresse. Mottaker, emne og feilmelding blir
-HTML-encodet før de settes inn i malen, siden emne/feilmelding i noen tilfeller kan stamme fra
-brukerkontrollert tekst (f.eks. kontaktskjema eller admin-egendefinert e-post).
+`SmtpSettings.AdminNotificationEmail` - **ikke** en hardkodet adresse. Mottaker, emne og feilmelding sendes
+uendret til malen og HTML-escapes der av `TemplateRenderService` (som for alle maler), siden emne/feilmelding
+i noen tilfeller kan stamme fra brukerkontrollert tekst (f.eks. kontaktskjema eller admin-egendefinert e-post).
 
 ### `NotificationStateStore` (Singleton)
 
@@ -92,9 +104,11 @@ fordi et re-forsøk ble gjort.**
 2. For hvert dokument kalles `PendingEmailService.ProcessEmailWithRetryAsync(..., existingNotificationId: email.Id)`.
    `existingNotificationId` er det som skiller en admin-styrt retry fra en helt ny hendelse:
    * **Lykkes sendingen** (på forsøk 1-5): dokumentet med den gitte iden slettes fra MongoDB.
-   * **Feiler alle 5 forsøk på nytt** (inkludert hard bounce): dokumentet **beholdes og oppdateres
-     in-place** (`MarkRetryFailedAsync` - ny feilmelding, `RetryCount` og tidspunkt). Det opprettes
-     **ikke** et nytt dokument med ny id, og det gamle slettes **ikke**.
+   * **Feiler alle 5 forsøk på nytt**: dokumentet **beholdes og oppdateres in-place** (`MarkRetryFailedAsync`
+     - ny feilmelding, `RetryCount` og tidspunkt). Det opprettes **ikke** et nytt dokument med ny id, og det
+     gamle slettes **ikke**.
+   * **Hard bounce**: `InvalidEmailDetectedEvent` publiseres, og dokumentet blir liggende **uendret** til admin
+     sletter det manuelt.
 3. Når antall dokumenter i MongoDB når 0, tilbakestilles `NotificationStateStore`
    (`HasPendingNotifications = false`, `HasNotifiedAdmin = false`).
 
@@ -105,5 +119,5 @@ seg som normalt: et helt nytt dokument opprettes (`AddAsync`) hvis alle 5 forsø
 
 | Unntak | Kastes når | Håndtering |
 | --- | --- | --- |
-| `TemplateRenderException` | Manglende mal, Scriban-syntaksfeil, eller kjøretidsfeil under rendering | Ufanget - stopper meldingsbehandlingen (fail-fast). |
-| `EmailDeliveryException` | SMTP-feil av enhver art (transient eller permanent) | Fanges av `PendingEmailService`, som skiller hard bounce fra transiente feil basert på feilteksten. |
+| `TemplateRenderException` | Manglende mal, Scriban-syntaksfeil, eller kjøretidsfeil under rendering | Ufanget - meldingen flyttes til `<kønavn>_error` i RabbitMQ (fail-fast, ingen retry). |
+| `EmailDeliveryException` | SMTP-feil av enhver art (transient eller permanent) | Fanges av `PendingEmailService`, som skiller hard bounce fra transiente feil ut fra det innpakkede `SmtpCommandException` (`ErrorCode`/`StatusCode`), ikke feilteksten. |

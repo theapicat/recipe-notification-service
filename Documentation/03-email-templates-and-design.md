@@ -18,7 +18,12 @@ byggets output-mappe via wildcard i `Infrastructure.csproj`:
 3. Bygger en `TemplateContext` med modellen importert via `ScriptObject.Import(...)` og en
    `TemplateFileSystemLoader` satt som `TemplateLoader` (nødvendig for at `{{ include ... }}` skal
    fungere - uten en registrert loader kaster Scriban et unntak ved `include`).
-4. Rendrer. Kjøretidsfeil (f.eks. manglende modellvariabel) → `TemplateRenderException`.
+4. HTML-escaper alle strengverdier i modellen (`Scriban.Functions.HtmlFunctions.Escape`) før rendering.
+   Scriban escaper ikke selv, og verdiene kommer utenfra (brukere, admin, klienter), så `<b>x</b>` i et felt
+   blir `&lt;b&gt;x&lt;/b&gt;` i e-posten. Gjelder også lenker (`&` → `&amp;`, som er gyldig i `href`).
+   Verdier som settes inne i malen (`title`, `footer_note`, `capture content`) berøres ikke. Maler skal
+   derfor **ikke** bruke `| html.escape` på modellverdier (det gir dobbel escaping).
+5. Rendrer. Kjøretidsfeil (f.eks. manglende modellvariabel) → `TemplateRenderException`.
 
 Se [04-error-handling-and-resilience.md](04-error-handling-and-resilience.md) for hvorfor dette er
 fail-fast og ikke fanges/gjenforsøkes.
